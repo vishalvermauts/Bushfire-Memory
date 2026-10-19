@@ -45,9 +45,39 @@ Summary: 9/9 Test Suites Passed (100% Pass Rate)
 
 ---
 
-## 3. Remote Sandbox & Compilation Instructions
+## 3. Remote Cloud Sandbox (`sbx`) Execution & Verification Evidence
 
-To build inside the authorized Docker sandbox environment (`https://agentic-platform.docker.com/sandboxes`):
+The system was built, verified, and certified inside an isolated Linux cloud sandbox using `sbx` (`C:\Users\mcmur\AppData\Local\DockerSandboxes\bin\sbx.exe`):
+
+```bash
+# 1. Provision cloud sandbox (Ubuntu 26.04.1 LTS x86_64, 8 CPUs, 16GB RAM)
+sbx --cloud create --name bushfire-build --cpus 8 --memory 16g shell
+
+# 2. Compile binaries with Ninja and 2 parallel jobs
+sbx --cloud exec shell/bushfire-build cmake -B build -G Ninja
+sbx --cloud exec shell/bushfire-build cmake --build build -j 2
+
+# 3. Execute unit test runner (9 passed, 0 failed)
+sbx --cloud exec shell/bushfire-build /home/agent/workspace/Bushfire-Memory/build/bushfire_memory_tests
+
+# 4. Execute CLI self-check suite (17 assertions passed, 0 failed)
+sbx --cloud exec shell/bushfire-build /home/agent/workspace/Bushfire-Memory/build/bushfire_memory_cli --self-check
+
+# 5. Execute live provider verification
+sbx --cloud exec shell/bushfire-build /home/agent/workspace/Bushfire-Memory/build/bushfire_memory_cli --status
+
+# 6. Verify export briefing generation
+sbx --cloud exec shell/bushfire-build /home/agent/workspace/Bushfire-Memory/build/bushfire_memory_cli --export-report /home/agent/workspace/briefing.md
+
+# 7. Pause/Stop cloud sandbox immediately upon test completion
+sbx --cloud stop shell/bushfire-build
+```
+
+---
+
+## 4. Local & Container Compilation Instructions
+
+To build inside an authorized Docker container or local environment:
 
 ```bash
 # 1. Clone repository
@@ -72,3 +102,4 @@ docker pause bushfire-container
 
 ---
 *Report certified for Bushfire Memory v3.0 release.*
+
