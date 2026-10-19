@@ -21,6 +21,8 @@ HotspotAdapter::HotspotAdapter(std::shared_ptr<HttpClient> http, std::shared_ptr
     status_.status = FreshnessStatus::FallbackSnapshot;
     status_.requiresKey = false;
     status_.keyConfigured = false;
+    hotspots_ = VerifiedSnapshots::getFallbackHotspots();
+    status_.recordCount = hotspots_.size();
 }
 
 DataSourceStatus HotspotAdapter::getStatus() {

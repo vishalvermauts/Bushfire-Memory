@@ -20,6 +20,8 @@ RfsIncidentAdapter::RfsIncidentAdapter(std::shared_ptr<HttpClient> http, std::sh
     status_.status = FreshnessStatus::FallbackSnapshot;
     status_.requiresKey = false;
     status_.keyConfigured = false;
+    incidents_ = VerifiedSnapshots::getFallbackIncidents();
+    status_.recordCount = incidents_.size();
 }
 
 DataSourceStatus RfsIncidentAdapter::getStatus() {
