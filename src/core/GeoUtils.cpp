@@ -303,7 +303,7 @@ std::string GeoUtils::getRelativeAge(const std::string& iso) {
 #if defined(_WIN32)
     gmtime_s(&nowTm, &timeT);
 #else
-    gmtime_r(&nowTm, &tmUtc);
+    gmtime_r(&timeT, &nowTm);
 #endif
 
     if (nowTm.tm_year + 1900 > year) {
