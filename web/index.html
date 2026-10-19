@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bushfire Memory — Australian Bushfire Intelligence & Historical Analysis Platform</title>
+  <meta name="description" content="C++20 client-first geospatial intelligence workbench for Australian bushfire observation, satellite hotspot tracking, and historical perimeter similarity analysis.">
+  
+  <!-- MapLibre GL JS -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-dark">
+
+  <!-- PERSISTENT NON-DISMISSIBLE SAFETY BANNER -->
+  <aside id="safety-banner" class="safety-banner" role="alert" aria-label="Emergency warning disclaimer">
+    <div class="safety-content">
+      <div class="safety-notice">
+        <span class="safety-badge">NOT AN EMERGENCY SERVICE</span>
+        <span class="safety-text">Research & Historical Information Only — Not for Emergency Decisions. Call <strong>000</strong> in life-threatening emergencies.</span>
+      </div>
+      <div class="safety-authorities">
+        <span class="auth-label">Official State Authorities:</span>
+        <a href="https://www.rfs.nsw.gov.au/" target="_blank" rel="noopener noreferrer">NSW RFS</a>
+        <a href="https://emergency.vic.gov.au/" target="_blank" rel="noopener noreferrer">VicEmergency</a>
+        <a href="https://www.fire.qld.gov.au/" target="_blank" rel="noopener noreferrer">QLD Fire</a>
+        <a href="https://www.emergency.wa.gov.au/" target="_blank" rel="noopener noreferrer">WA</a>
+        <a href="https://www.cfs.sa.gov.au/" target="_blank" rel="noopener noreferrer">SA CFS</a>
+        <a href="https://alert.tas.gov.au/" target="_blank" rel="noopener noreferrer">TAS</a>
+        <a href="https://esa.act.gov.au/" target="_blank" rel="noopener noreferrer">ACT</a>
+        <a href="https://pfes.nt.gov.au/incidentmap" target="_blank" rel="noopener noreferrer">NT</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- APP HEADER & NAVIGATION -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">🔥</div>
+      <div>
+        <h1 class="brand-title">BUSHFIRE MEMORY</h1>
+        <div class="brand-subtitle">Australian Bushfire Intelligence & Remote Sensing Workbench (C++20)</div>
+      </div>
+    </div>
+
+    <!-- Workspace Navigation -->
+    <nav class="workspace-nav" aria-label="Main Navigation">
+      <button class="nav-tab active" data-workspace="map" id="tab-map">
+        <span class="nav-icon">🗺️</span> Map Workbench
+      </button>
+      <button class="nav-tab" data-workspace="explorer" id="tab-explorer">
+        <span class="nav-icon">📊</span> Incident & History Explorer
+      </button>
+      <button class="nav-tab" data-workspace="satellite" id="tab-satellite">
+        <span class="nav-icon">🛰️</span> Satellite & Change Inspector
+      </button>
+      <button class="nav-tab" data-workspace="health" id="tab-health">
+        <span class="nav-icon">🛡️</span> Data Health & Exports
+      </button>
+    </nav>
+
+    <!-- Global Feed & Timezone Status -->
+    <div class="header-status">
+      <div class="status-indicator">
+        <span id="global-freshness-pill" class="badge badge-fallback">CORS / Snapshot Mode</span>
+      </div>
+      <div class="time-clock">
+        <span id="clock-aest">--:--:-- AEST</span>
+        <span id="clock-utc" class="text-muted">--:-- UTC</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APPLICATION CONTENT -->
+  <main class="app-main">
+
+    <!-- WORKSPACE 1: INTERACTIVE MAP WORKBENCH -->
+    <section id="workspace-map" class="workspace-panel active">
+      <div class="map-layout">
+        <!-- Floating Layer Control & Region Jump -->
+        <div class="map-overlay-panel" id="map-controls">
+          <div class="panel-header">
+            <h3>Geospatial Layers</h3>
+            <button id="btn-refresh-map" class="btn-sm" title="Force Refresh Feeds">↻ Refresh</button>
+          </div>
+
+          <!-- Region Jump Quick Selector -->
+          <div class="form-group">
+            <label for="region-select">Quick Region Jump</label>
+            <select id="region-select" class="form-control-sm">
+              <option value="all-nsw">All New South Wales (Default)</option>
+              <option value="sydney-bluemts">Greater Sydney & Blue Mountains</option>
+              <option value="hawkesbury-wollemi">Hawkesbury & Wollemi (Gospers Mtn)</option>
+              <option value="south-coast">Shoalhaven & South Coast (Currowan)</option>
+              <option value="snowy-monaro">Snowy Monaro & Riverina (Dunns Rd)</option>
+              <option value="warrumbungle">Warrumbungle & Coonabarabran</option>
+              <option value="pilliga">Pilliga Forest & Narrabri</option>
+              <option value="all-australia">Continental Australia</option>
+            </select>
+          </div>
+
+          <!-- Layer Toggles -->
+          <div class="layer-item">
+            <label class="checkbox-label">
+              <input type="checkbox" id="layer-toggle-incidents" checked>
+              <span class="sym-badge sym-rfs">ADV</span> Official RFS Incidents
+            </label>
+            <span class="badge-count" id="count-incidents">0</span>
+          </div>
+
+          <div class="layer-item">
+            <label class="checkbox-label">
+              <input type="checkbox" id="layer-toggle-hotspots" checked>
+              <span class="sym-badge sym-hotspot">HOT</span> Satellite Thermal Hotspots
+            </label>
+            <span class="badge-count" id="count-hotspots">0</span>
+          </div>
+
+          <div class="layer-item">
+            <label class="checkbox-label">
+              <input type="checkbox" id="layer-toggle-history" checked>
+              <span class="sym-badge sym-history">HIST</span> NPWS Historical Perimeters
+            </label>
+            <span class="badge-count" id="count-history">0</span>
+          </div>
+
+          <!-- WMS Severity Raster Layer -->
+          <div class="layer-item-wms">
+            <div class="wms-header">
+              <label class="checkbox-label">
+                <input type="checkbox" id="layer-toggle-fesm">
+                <span class="sym-badge sym-wms">FESM</span> NSW Burn Severity (WMS)
+              </label>
+            </div>
+            <div class="opacity-slider-row">
+              <label for="fesm-opacity">Opacity: <span id="fesm-opacity-val">70%</span></label>
+              <input type="range" id="fesm-opacity" min="0" max="100" value="70">
+            </div>
+            <div class="wms-caveat">
+              Validated canopy & understorey machine-learning model (FESM v1).
+            </div>
+          </div>
+
+          <!-- Basemap Selector -->
+          <div class="form-group basemap-selector">
+            <label>Basemap Style</label>
+            <div class="radio-group">
+              <label><input type="radio" name="basemap" value="dark" checked> Dark Matter</label>
+              <label><input type="radio" name="basemap" value="liberty"> OpenFreeMap</label>
+              <label><input type="radio" name="basemap" value="imagery"> Satellite</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- The MapLibre Container -->
+        <div id="map-container" class="map-container"></div>
+
+        <!-- Feature Provenance Drawer (Slide-out on click) -->
+        <aside id="feature-drawer" class="feature-drawer hidden">
+          <div class="drawer-header">
+            <h3 id="drawer-title">Feature Details</h3>
+            <button id="btn-close-drawer" class="btn-icon">✕</button>
+          </div>
+          <div class="drawer-body" id="drawer-body">
+            <!-- Dynamically populated -->
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- WORKSPACE 2: INCIDENT & HISTORY EXPLORER + SIMILARITY ENGINE -->
+    <section id="workspace-explorer" class="workspace-panel">
+      <div class="explorer-layout">
+        <div class="explorer-sidebar">
+          <div class="explorer-nav-tabs">
+            <button id="btn-show-incidents" class="tab-btn active">Active Incidents</button>
+            <button id="btn-show-history" class="tab-btn">Historical Fires</button>
+          </div>
+
+          <!-- Search & Filters -->
+          <div class="filter-box">
+            <input type="text" id="explorer-search" class="form-control" placeholder="Search by fire name or council...">
+            
+            <div class="filter-row">
+              <div class="form-group">
+                <label for="filter-alert">Alert Level</label>
+                <select id="filter-alert" class="form-control-sm">
+                  <option value="">All Alert Levels</option>
+                  <option value="Emergency Warning">Emergency Warning</option>
+                  <option value="Watch and Act">Watch and Act</option>
+                  <option value="Advice">Advice</option>
+                  <option value="Not Applicable">Not Applicable</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="filter-firetype">Fire Type</label>
+                <select id="filter-firetype" class="form-control-sm">
+                  <option value="">All Types</option>
+                  <option value="Wildfire">Wildfire</option>
+                  <option value="Prescribed Burn">Prescribed Burn</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="filter-minarea">Min Area: <span id="lbl-minarea">0 ha</span></label>
+              <input type="range" id="filter-minarea" min="0" max="100000" step="500" value="0">
+            </div>
+          </div>
+
+          <!-- List Table -->
+          <div class="table-container" id="explorer-table-container">
+            <table class="data-table" id="explorer-table">
+              <thead>
+                <tr>
+                  <th>Event Name</th>
+                  <th>Level / Type</th>
+                  <th>Area</th>
+                  <th>Location</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="explorer-table-body">
+                <!-- Dynamically rendered -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Similarity Comparator Panel -->
+        <div class="similarity-panel" id="similarity-panel">
+          <div class="sim-header">
+            <h3>Similar Historical Events Engine</h3>
+            <p class="sim-subtitle">Multi-factor deterministic C++20 scoring based on Geography, Log-Area, Seasonality, and Category.</p>
+          </div>
+
+          <div id="sim-reference-card" class="sim-ref-card">
+            <div class="empty-state">Select any event from the table to calculate top historically similar fires.</div>
+          </div>
+
+          <div id="sim-results" class="sim-results-list">
+            <!-- Dynamically populated with explainable breakdown charts -->
+          </div>
+
+          <div class="sim-disclaimer">
+            <strong>Mandatory Scientific Caveat:</strong> Statistical attribute similarity reflects historical archive comparisons only and does not predict future fire behaviour, spread, or risk.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORKSPACE 3: SATELLITE SCENE SEARCH & PRE/POST CHANGE INSPECTOR -->
+    <section id="workspace-satellite" class="workspace-panel">
+      <div class="satellite-layout">
+        <!-- STAC Query & Controls -->
+        <div class="stac-sidebar">
+          <h3>Sentinel-2 & STAC Discovery</h3>
+          <p class="text-sm">Query Digital Earth Australia and Copernicus Sentinel-2 Level-2A Analysis Ready Data (ARD).</p>
+
+          <div class="form-group">
+            <label for="stac-preset">Preset Historical Study Areas</label>
+            <select id="stac-preset" class="form-control">
+              <option value="gospers">Gospers Mountain (Wollemi 2019-20)</option>
+              <option value="dunns">Dunns Road (Snowy Monaro 2020)</option>
+              <option value="currowan">Currowan (South Coast 2019-20)</option>
+              <option value="warrumbungle">Warrumbungle (2013)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="spectral-mode-select">Optical & Spectral Mode</label>
+            <select id="spectral-mode-select" class="form-control">
+              <option value="true-colour">True Colour RGB (B04, B03, B02)</option>
+              <option value="false-colour-swir">False Colour SWIR Burn Scar (B12, B8A, B04)</option>
+              <option value="ndvi">NDVI Vegetation Health (B08, B04)</option>
+              <option value="dnbr">NBR / dNBR Burn Severity (B08, B12)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="stac-cloud-slider">Max Cloud Cover: <span id="lbl-cloud">20%</span></label>
+            <input type="range" id="stac-cloud-slider" min="0" max="100" value="20">
+          </div>
+
+          <button id="btn-query-stac" class="btn-primary w-full">Search STAC Scenes</button>
+
+          <!-- Spectral Index Disclosure Card -->
+          <div class="spectral-card" id="spectral-card">
+            <h4 id="spec-name">True Colour (Natural RGB)</h4>
+            <div class="spec-formula" id="spec-formula">R = B04, G = B03, B = B02</div>
+            <p id="spec-desc" class="spec-desc">Simulates human visual perception using visible light bands.</p>
+            <div class="spec-caveat" id="spec-caveat">
+              <strong>Caveat:</strong> Cannot penetrate thick smoke or cloud. Cannot reliably distinguish dark shadow from light burn scars.
+            </div>
+          </div>
+        </div>
+
+        <!-- Split / Curtain Swipe Comparator -->
+        <div class="stac-viewer">
+          <div class="viewer-header">
+            <div class="viewer-badge pre">PRE-FIRE SCENE (OCT 2019)</div>
+            <div class="viewer-title">Interactive Multi-Temporal Change Comparator</div>
+            <div class="viewer-badge post">POST-FIRE SCENE (FEB 2020)</div>
+          </div>
+
+          <div class="comparison-container" id="comparison-container">
+            <div class="scene-half pre-half">
+              <div class="scene-image pre-img" id="img-pre"></div>
+              <div class="scene-overlay-label">Pre-Fire Reflectance (Sentinel-2A MSI)</div>
+            </div>
+            <div class="scene-half post-half">
+              <div class="scene-image post-img" id="img-post"></div>
+              <div class="scene-overlay-label">Post-Fire Burn Scar (Sentinel-2B MSI)</div>
+            </div>
+            <div class="split-slider-line"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORKSPACE 4: DATA HEALTH, SETTINGS & EXPORTS -->
+    <section id="workspace-health" class="workspace-panel">
+      <div class="health-layout">
+        <!-- Live Provider Matrix -->
+        <div class="health-card">
+          <div class="card-header">
+            <h3>Live Data Feeds & Provider Provenance Matrix</h3>
+            <button id="btn-force-refresh-all" class="btn-sm">↻ Force Refresh All Feeds</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Provider ID</th>
+                <th>Source Name</th>
+                <th>Endpoint / Protocol</th>
+                <th>Licence</th>
+                <th>Freshness Status</th>
+                <th>Latency</th>
+                <th>Records</th>
+              </tr>
+            </thead>
+            <tbody id="provider-status-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- System Self-Test & Certification Controls -->
+        <div class="health-card">
+          <div class="card-header">
+            <h3>Runtime Verification & Engine Certification</h3>
+            <button id="btn-run-selftest" class="btn-primary">▶ Run System Self-Test Suite</button>
+          </div>
+          <div id="selftest-results" class="selftest-console">
+            Click "Run System Self-Test Suite" to execute runtime assertions against geospatial parsers, the 4-factor mathematical similarity engine, and export sanitizers.
+          </div>
+        </div>
+
+        <!-- Settings: API Key Configuration -->
+        <div class="health-card">
+          <h3>Runtime Configuration & Secret Management</h3>
+          <p class="text-sm">Optional keys are stored securely in local SQLite configuration tables and are never exposed in public assets.</p>
+          <div class="form-group">
+            <label for="txt-firms-key">NASA FIRMS API Key (Optional)</label>
+            <div class="input-with-button">
+              <input type="password" id="txt-firms-key" class="form-control" placeholder="Enter NASA MAP_KEY...">
+              <button id="btn-save-firms-key" class="btn-secondary">Save Key</button>
+            </div>
+            <span class="text-xs text-muted">Leave empty to use Geoscience Australia DEA Hotspots with zero API key required.</span>
+          </div>
+        </div>
+
+        <!-- Reproducible Research Exporter -->
+        <div class="health-card">
+          <h3>Reproducible Research & Dataset Exports</h3>
+          <p class="text-sm">Export currently active records with complete provenance, dual timestamps, and CC BY 4.0 / NASA attribution.</p>
+          <div class="export-btn-group">
+            <a href="/api/v1/export/geojson" class="btn-export" download="bushfire_memory_export.geojson">
+              📥 RFC 7946 GeoJSON (.geojson)
+            </a>
+            <a href="/api/v1/export/csv_incidents" class="btn-export" download="bushfire_incidents.csv">
+              📥 Incidents Table (.csv)
+            </a>
+            <a href="/api/v1/export/csv_history" class="btn-export" download="bushfire_history.csv">
+              📥 Historical Perimeters (.csv)
+            </a>
+            <a href="/api/v1/export/csv_hotspots" class="btn-export" download="bushfire_hotspots.csv">
+              📥 Thermal Hotspots (.csv)
+            </a>
+            <a href="/api/v1/export/markdown" class="btn-export" download="bushfire_research_briefing.md">
+              📄 Research Briefing (.md)
+            </a>
+            <button id="btn-print-report" class="btn-export">
+              🖨️ Print-Ready View
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+# Build directories
+build/
+bin/
+out/
+cmake-build-*/
+.cache/
+
+# Compiled binaries and libraries
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+*.a
+*.lib
+
+# SQLite databases & runtime data
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.db
+data/*.sqlite3
+
+# Environment & credentials
+.env
+.env.*
+!.env.example
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
