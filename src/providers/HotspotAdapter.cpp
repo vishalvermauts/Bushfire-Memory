@@ -71,7 +71,7 @@ void HotspotAdapter::refresh(bool force) {
     }
 
     // Default: Query DEA Hotspots WFS
-    HttpResponse resp = http_->get(DEA_WFS_URL, 12);
+    HttpResponse resp = http_->get(DEA_WFS_URL, 5);
     if (resp.isSuccess() && !resp.body.empty()) {
         auto parsed = parseDeaHotspotsJson(resp.body, FreshnessStatus::Live, resp.latencyMs);
         if (!parsed.empty()) {
