@@ -34,6 +34,7 @@ const REGION_PRESETS = {
 const BASEMAP_STYLES = {
   dark: {
     version: 8,
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
     sources: {
       'esri-dark-base': {
         type: 'raster',
@@ -60,6 +61,7 @@ const BASEMAP_STYLES = {
   liberty: 'https://tiles.openfreemap.org/styles/liberty',
   imagery: {
     version: 8,
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
     sources: {
       'esri-imagery': {
         type: 'raster',
@@ -194,13 +196,7 @@ function initMap() {
       document.querySelectorAll('.basemap-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const styleKey = btn.dataset.style;
-      if (BASEMAP_STYLES[styleKey]) {
-        state.map.setStyle(BASEMAP_STYLES[styleKey]);
-        state.map.once('style.load', () => {
-          setupMapLayers();
-          updateMapSources();
-        });
-      }
+      switchBasemap(styleKey);
     });
   });
 
@@ -250,165 +246,220 @@ function initMap() {
   });
 }
 
+function switchBasemap(styleKey) {
+  const targetStyle = BASEMAP_STYLES[styleKey];
+  if (!targetStyle || !state.map) return;
+
+  state.map.setStyle(targetStyle);
+
+  const rebind = () => {
+    if (state.map.isStyleLoaded()) {
+      state.map.off('styledata', rebind);
+      setupMapLayers();
+      updateMapSources();
+    }
+  };
+
+  state.map.on('styledata', rebind);
+}
+
+function applyLayerVisibilities() {
+  if (!state.map) return;
+  const incVis = document.getElementById('layer-toggle-incidents')?.checked ? 'visible' : 'none';
+  const hotVis = document.getElementById('layer-toggle-hotspots')?.checked ? 'visible' : 'none';
+  const histVis = document.getElementById('layer-toggle-history')?.checked ? 'visible' : 'none';
+  const fesmVis = document.getElementById('layer-toggle-fesm')?.checked ? 'visible' : 'none';
+
+  if (state.map.getLayer('layer-incidents-circles')) state.map.setLayoutProperty('layer-incidents-circles', 'visibility', incVis);
+  if (state.map.getLayer('layer-incidents-labels')) state.map.setLayoutProperty('layer-incidents-labels', 'visibility', incVis);
+  if (state.map.getLayer('layer-hotspots-pulse')) state.map.setLayoutProperty('layer-hotspots-pulse', 'visibility', hotVis);
+  if (state.map.getLayer('layer-history-fill')) state.map.setLayoutProperty('layer-history-fill', 'visibility', histVis);
+  if (state.map.getLayer('layer-history-line')) state.map.setLayoutProperty('layer-history-line', 'visibility', histVis);
+  if (state.map.getLayer('layer-fesm-wms')) state.map.setLayoutProperty('layer-fesm-wms', 'visibility', fesmVis);
+}
+
 function setupMapLayers() {
   if (!state.map) return;
 
   // 1. Historical Perimeters Source & Layers
-  if (!state.map.getSource('source-history')) {
-    state.map.addSource('source-history', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] }
-    });
+  try {
+    if (!state.map.getSource('source-history')) {
+      state.map.addSource('source-history', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
 
-    state.map.addLayer({
-      id: 'layer-history-fill',
-      type: 'fill',
-      source: 'source-history',
-      paint: {
-        'fill-color': [
-          'match',
-          ['get', 'fireType'],
-          'Wildfire', '#ea580c',
-          'Prescribed Burn', '#0d9488',
-          '#ca8a04'
-        ],
-        'fill-opacity': 0.35
-      }
-    });
+      state.map.addLayer({
+        id: 'layer-history-fill',
+        type: 'fill',
+        source: 'source-history',
+        paint: {
+          'fill-color': [
+            'match',
+            ['get', 'fireType'],
+            'Wildfire', '#ea580c',
+            'Prescribed Burn', '#0d9488',
+            '#ca8a04'
+          ],
+          'fill-opacity': 0.35
+        }
+      });
 
-    state.map.addLayer({
-      id: 'layer-history-line',
-      type: 'line',
-      source: 'source-history',
-      paint: {
-        'line-color': [
-          'match',
-          ['get', 'fireType'],
-          'Wildfire', '#f97316',
-          'Prescribed Burn', '#14b8a6',
-          '#eab308'
-        ],
-        'line-width': 1.5,
-        'line-dasharray': [
-          'match',
-          ['get', 'fireType'],
-          'Prescribed Burn', ['literal', [2, 2]],
-          ['literal', [1, 0]]
-        ]
-      }
-    });
+      state.map.addLayer({
+        id: 'layer-history-line',
+        type: 'line',
+        source: 'source-history',
+        paint: {
+          'line-color': [
+            'match',
+            ['get', 'fireType'],
+            'Wildfire', '#f97316',
+            'Prescribed Burn', '#14b8a6',
+            '#eab308'
+          ],
+          'line-width': 1.5
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Error setting up history layer:', err);
   }
 
   // 2. Hotspots Source & Layer
-  if (!state.map.getSource('source-hotspots')) {
-    state.map.addSource('source-hotspots', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] }
-    });
+  try {
+    if (!state.map.getSource('source-hotspots')) {
+      state.map.addSource('source-hotspots', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
 
-    state.map.addLayer({
-      id: 'layer-hotspots-pulse',
-      type: 'circle',
-      source: 'source-hotspots',
-      paint: {
-        'circle-color': [
-          'interpolate', ['linear'], ['coalesce', ['get', 'frpMw'], 10],
-          5, '#f59e0b',
-          25, '#f97316',
-          100, '#ef4444',
-          300, '#b91c1c'
-        ],
-        'circle-radius': [
-          'interpolate', ['linear'], ['coalesce', ['get', 'frpMw'], 10],
-          5, 3.5,
-          50, 7.5,
-          200, 14
-        ],
-        'circle-stroke-color': '#ffffff',
-        'circle-stroke-width': 1,
-        'circle-opacity': 0.88
-      }
-    });
+      state.map.addLayer({
+        id: 'layer-hotspots-pulse',
+        type: 'circle',
+        source: 'source-hotspots',
+        paint: {
+          'circle-color': [
+            'interpolate', ['linear'], ['coalesce', ['get', 'frpMw'], 10],
+            5, '#f59e0b',
+            25, '#f97316',
+            100, '#ef4444',
+            300, '#b91c1c'
+          ],
+          'circle-radius': [
+            'interpolate', ['linear'], ['coalesce', ['get', 'frpMw'], 10],
+            5, 3.5,
+            50, 7.5,
+            200, 14
+          ],
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 1,
+          'circle-opacity': 0.88
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Error setting up hotspots layer:', err);
   }
 
   // 3. Current Incidents Source & Layers
-  if (!state.map.getSource('source-incidents')) {
-    state.map.addSource('source-incidents', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] }
-    });
+  try {
+    if (!state.map.getSource('source-incidents')) {
+      state.map.addSource('source-incidents', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
 
-    state.map.addLayer({
-      id: 'layer-incidents-circles',
-      type: 'circle',
-      source: 'source-incidents',
-      paint: {
-        'circle-color': [
-          'match',
-          ['get', 'alertLevel'],
-          'Emergency Warning', '#dc2626',
-          'Watch and Act', '#f59e0b',
-          'Advice', '#2563eb',
-          '#64748b'
-        ],
-        'circle-radius': 7,
-        'circle-stroke-color': '#ffffff',
-        'circle-stroke-width': 2
-      }
-    });
+      state.map.addLayer({
+        id: 'layer-incidents-circles',
+        type: 'circle',
+        source: 'source-incidents',
+        paint: {
+          'circle-color': [
+            'match',
+            ['get', 'alertLevel'],
+            'Emergency Warning', '#dc2626',
+            'Watch and Act', '#f59e0b',
+            'Advice', '#2563eb',
+            '#64748b'
+          ],
+          'circle-radius': 7,
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 2
+        }
+      });
 
-    state.map.addLayer({
-      id: 'layer-incidents-labels',
-      type: 'symbol',
-      source: 'source-incidents',
-      layout: {
-        'text-field': ['get', 'title'],
-        'text-size': 11,
-        'text-offset': [0, 1.2],
-        'text-anchor': 'top',
-        'text-font': ['Open Sans Semibold']
-      },
-      paint: {
-        'text-color': '#f8fafc',
-        'text-halo-color': '#030712',
-        'text-halo-width': 1.5
+      try {
+        state.map.addLayer({
+          id: 'layer-incidents-labels',
+          type: 'symbol',
+          source: 'source-incidents',
+          layout: {
+            'text-field': ['get', 'title'],
+            'text-size': 11,
+            'text-offset': [0, 1.2],
+            'text-anchor': 'top',
+            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold']
+          },
+          paint: {
+            'text-color': '#f8fafc',
+            'text-halo-color': '#030712',
+            'text-halo-width': 1.5
+          }
+        });
+      } catch (labelErr) {
+        console.warn('Incident labels skipped for this basemap style:', labelErr);
       }
-    });
+    }
+  } catch (err) {
+    console.warn('Error setting up incidents layer:', err);
   }
 
   // 4. WMS Severity Layer (FESM v1)
-  if (!state.map.getSource('source-fesm-wms')) {
-    state.map.addSource('source-fesm-wms', {
-      type: 'raster',
-      tiles: [
-        'https://datasets.seed.nsw.gov.au/geoserver/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=fesm_v1&CRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=256&HEIGHT=256&FORMAT=image/png&TRANSPARENT=TRUE'
-      ],
-      tileSize: 256
-    });
+  try {
+    if (!state.map.getSource('source-fesm-wms')) {
+      state.map.addSource('source-fesm-wms', {
+        type: 'raster',
+        tiles: [
+          'https://datasets.seed.nsw.gov.au/geoserver/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=fesm_v1&CRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=256&HEIGHT=256&FORMAT=image/png&TRANSPARENT=TRUE'
+        ],
+        tileSize: 256
+      });
 
-    state.map.addLayer({
-      id: 'layer-fesm-wms',
-      type: 'raster',
-      source: 'source-fesm-wms',
-      layout: { visibility: 'none' },
-      paint: { 'raster-opacity': 0.7 }
-    }, 'layer-incidents-circles');
+      state.map.addLayer({
+        id: 'layer-fesm-wms',
+        type: 'raster',
+        source: 'source-fesm-wms',
+        layout: { visibility: 'none' },
+        paint: { 'raster-opacity': 0.7 }
+      });
+    }
+  } catch (err) {
+    console.warn('Error setting up FESM WMS layer:', err);
   }
 
-  // Click inspection handlers
-  ['layer-incidents-circles', 'layer-hotspots-pulse', 'layer-history-fill'].forEach(layerId => {
-    state.map.on('click', layerId, (e) => {
-      if (e.features && e.features.length > 0) {
-        showFeatureDetails(e.features[0]);
-      }
-    });
+  // Apply layer visibility states from checkboxes
+  applyLayerVisibilities();
 
-    state.map.on('mouseenter', layerId, () => {
-      state.map.getCanvas().style.cursor = 'pointer';
-    });
-    state.map.on('mouseleave', layerId, () => {
-      state.map.getCanvas().style.cursor = '';
-    });
+  // Re-attach Click inspection handlers
+  ['layer-incidents-circles', 'layer-hotspots-pulse', 'layer-history-fill'].forEach(layerId => {
+    if (state.map.getLayer(layerId)) {
+      state.map.off('click', layerId);
+      state.map.on('click', layerId, (e) => {
+        if (e.features && e.features.length > 0) {
+          showFeatureDetails(e.features[0]);
+        }
+      });
+
+      state.map.off('mouseenter', layerId);
+      state.map.on('mouseenter', layerId, () => {
+        state.map.getCanvas().style.cursor = 'pointer';
+      });
+
+      state.map.off('mouseleave', layerId);
+      state.map.on('mouseleave', layerId, () => {
+        state.map.getCanvas().style.cursor = '';
+      });
+    }
   });
 }
 
