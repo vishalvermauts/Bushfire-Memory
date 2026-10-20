@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bushfire Memory — Australian Bushfire Intelligence & Historical Analysis Platform</title>
-  <meta name="description" content="C++20 client-first geospatial intelligence workbench for Australian bushfire observation, satellite hotspot tracking, and historical perimeter similarity analysis.">
+  <title>Bushfire Memory — Australian Bushfire Intelligence & Historical Analysis</title>
+  <meta name="description" content="Geospatial intelligence platform for Australian bushfire observation, satellite hotspot tracking, and historical perimeter similarity analysis.">
   
   <!-- MapLibre GL JS -->
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
@@ -13,63 +13,60 @@
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="theme-dark">
 
-  <!-- PERSISTENT NON-DISMISSIBLE SAFETY BANNER -->
+  <!-- TOP EMERGENCY & PUBLIC SAFETY NOTICE -->
   <aside id="safety-banner" class="safety-banner" role="alert" aria-label="Emergency warning disclaimer">
     <div class="safety-content">
       <div class="safety-notice">
         <span class="safety-badge">NOT AN EMERGENCY SERVICE</span>
-        <span class="safety-text">Research & Historical Information Only — Not for Emergency Decisions. Call <strong>000</strong> in life-threatening emergencies.</span>
+        <span class="safety-text">Research & Historical Information Only. In life-threatening emergencies, immediately call <strong>000</strong>.</span>
       </div>
       <div class="safety-authorities">
-        <span class="auth-label">Official State Authorities:</span>
+        <span class="auth-label">Official Feeds:</span>
         <a href="https://www.rfs.nsw.gov.au/" target="_blank" rel="noopener noreferrer">NSW RFS</a>
         <a href="https://emergency.vic.gov.au/" target="_blank" rel="noopener noreferrer">VicEmergency</a>
         <a href="https://www.fire.qld.gov.au/" target="_blank" rel="noopener noreferrer">QLD Fire</a>
-        <a href="https://www.emergency.wa.gov.au/" target="_blank" rel="noopener noreferrer">WA</a>
         <a href="https://www.cfs.sa.gov.au/" target="_blank" rel="noopener noreferrer">SA CFS</a>
-        <a href="https://alert.tas.gov.au/" target="_blank" rel="noopener noreferrer">TAS</a>
-        <a href="https://esa.act.gov.au/" target="_blank" rel="noopener noreferrer">ACT</a>
-        <a href="https://pfes.nt.gov.au/incidentmap" target="_blank" rel="noopener noreferrer">NT</a>
+        <a href="https://www.emergency.wa.gov.au/" target="_blank" rel="noopener noreferrer">WA</a>
       </div>
     </div>
   </aside>
 
-  <!-- APP HEADER & NAVIGATION -->
+  <!-- APP HEADER & NAVIGATION BAR -->
   <header class="app-header">
     <div class="brand">
       <div class="brand-icon">🔥</div>
       <div>
         <h1 class="brand-title">BUSHFIRE MEMORY</h1>
-        <div class="brand-subtitle">Australian Bushfire Intelligence & Remote Sensing Workbench (C++20)</div>
+        <div class="brand-subtitle">Australian Bushfire Intelligence & Historical Analogue Platform</div>
       </div>
     </div>
 
-    <!-- Workspace Navigation -->
+    <!-- Workspace Navigation Tabs -->
     <nav class="workspace-nav" aria-label="Main Navigation">
       <button class="nav-tab active" data-workspace="map" id="tab-map">
-        <span class="nav-icon">🗺️</span> Map Workbench
+        <span class="nav-icon">🗺️</span> Live Map
       </button>
       <button class="nav-tab" data-workspace="explorer" id="tab-explorer">
-        <span class="nav-icon">📊</span> Incident & History Explorer
+        <span class="nav-icon">📊</span> Fire Explorer & Matcher
       </button>
       <button class="nav-tab" data-workspace="satellite" id="tab-satellite">
-        <span class="nav-icon">🛰️</span> Satellite & Change Inspector
+        <span class="nav-icon">🛰️</span> Satellite & Spectral Indices
       </button>
       <button class="nav-tab" data-workspace="health" id="tab-health">
-        <span class="nav-icon">🛡️</span> Data Health & Exports
+        <span class="nav-icon">⚙️</span> Data Feeds & Settings
       </button>
     </nav>
 
-    <!-- Global Feed & Timezone Status -->
+    <!-- Real-time Status Badge & Clocks -->
     <div class="header-status">
       <div class="status-indicator">
-        <span id="global-freshness-pill" class="badge badge-fallback">CORS / Snapshot Mode</span>
+        <span id="global-freshness-pill" class="badge badge-live">🟢 Live Radar • Active</span>
       </div>
       <div class="time-clock">
         <span id="clock-aest">--:--:-- AEST</span>
@@ -84,78 +81,89 @@
     <!-- WORKSPACE 1: INTERACTIVE MAP WORKBENCH -->
     <section id="workspace-map" class="workspace-panel active">
       <div class="map-layout">
-        <!-- Floating Layer Control & Region Jump -->
+
+        <!-- Quick Region Jump Chips (Floating Top Center) -->
+        <div class="floating-region-bar" id="floating-region-bar">
+          <span class="region-bar-label">Jump to:</span>
+          <button class="region-chip active" data-region="all-nsw">📍 All NSW</button>
+          <button class="region-chip" data-region="sydney-bluemts">🏙️ Sydney & Blue Mts</button>
+          <button class="region-chip" data-region="hawkesbury-wollemi">🌲 Gospers Mountain</button>
+          <button class="region-chip" data-region="south-coast">🌊 Currowan (South Coast)</button>
+          <button class="region-chip" data-region="snowy-monaro">❄️ Dunns Road (Snowy)</button>
+          <button class="region-chip" data-region="warrumbungle">🔭 Warrumbungle</button>
+          <button class="region-chip" data-region="all-australia">🌏 All Australia</button>
+        </div>
+
+        <!-- Floating Glassmorphic Layer Control Dock (Left) -->
         <div class="map-overlay-panel" id="map-controls">
           <div class="panel-header">
-            <h3>Geospatial Layers</h3>
-            <button id="btn-refresh-map" class="btn-sm" title="Force Refresh Feeds">↻ Refresh</button>
+            <div class="panel-header-title">
+              <span class="panel-icon">⚙️</span>
+              <h3>Map Layers</h3>
+            </div>
+            <div class="panel-actions">
+              <button id="btn-refresh-map" class="btn-icon" title="Refresh Live Feeds">↻</button>
+              <button id="btn-toggle-controls" class="btn-icon" title="Minimize / Expand Panel">−</button>
+            </div>
           </div>
 
-          <!-- Region Jump Quick Selector -->
-          <div class="form-group">
-            <label for="region-select">Quick Region Jump</label>
-            <select id="region-select" class="form-control-sm">
-              <option value="all-nsw">All New South Wales (Default)</option>
-              <option value="sydney-bluemts">Greater Sydney & Blue Mountains</option>
-              <option value="hawkesbury-wollemi">Hawkesbury & Wollemi (Gospers Mtn)</option>
-              <option value="south-coast">Shoalhaven & South Coast (Currowan)</option>
-              <option value="snowy-monaro">Snowy Monaro & Riverina (Dunns Rd)</option>
-              <option value="warrumbungle">Warrumbungle & Coonabarabran</option>
-              <option value="pilliga">Pilliga Forest & Narrabri</option>
-              <option value="all-australia">Continental Australia</option>
-            </select>
-          </div>
+          <div class="panel-body" id="controls-panel-body">
+            <!-- Layer Toggles -->
+            <div class="layer-group">
+              <label class="toggle-card">
+                <input type="checkbox" id="layer-toggle-incidents" checked>
+                <div class="toggle-content">
+                  <div class="toggle-title">
+                    <span class="dot dot-rfs"></span>
+                    <span>Official RFS Incidents</span>
+                  </div>
+                  <span class="badge-count" id="count-incidents">0</span>
+                </div>
+              </label>
 
-          <!-- Layer Toggles -->
-          <div class="layer-item">
-            <label class="checkbox-label">
-              <input type="checkbox" id="layer-toggle-incidents" checked>
-              <span class="sym-badge sym-rfs">ADV</span> Official RFS Incidents
-            </label>
-            <span class="badge-count" id="count-incidents">0</span>
-          </div>
+              <label class="toggle-card">
+                <input type="checkbox" id="layer-toggle-hotspots" checked>
+                <div class="toggle-content">
+                  <div class="toggle-title">
+                    <span class="dot dot-hotspot"></span>
+                    <span>Satellite Hotspots</span>
+                  </div>
+                  <span class="badge-count" id="count-hotspots">0</span>
+                </div>
+              </label>
 
-          <div class="layer-item">
-            <label class="checkbox-label">
-              <input type="checkbox" id="layer-toggle-hotspots" checked>
-              <span class="sym-badge sym-hotspot">HOT</span> Satellite Thermal Hotspots
-            </label>
-            <span class="badge-count" id="count-hotspots">0</span>
-          </div>
-
-          <div class="layer-item">
-            <label class="checkbox-label">
-              <input type="checkbox" id="layer-toggle-history" checked>
-              <span class="sym-badge sym-history">HIST</span> NPWS Historical Perimeters
-            </label>
-            <span class="badge-count" id="count-history">0</span>
-          </div>
-
-          <!-- WMS Severity Raster Layer -->
-          <div class="layer-item-wms">
-            <div class="wms-header">
-              <label class="checkbox-label">
-                <input type="checkbox" id="layer-toggle-fesm">
-                <span class="sym-badge sym-wms">FESM</span> NSW Burn Severity (WMS)
+              <label class="toggle-card">
+                <input type="checkbox" id="layer-toggle-history" checked>
+                <div class="toggle-content">
+                  <div class="toggle-title">
+                    <span class="dot dot-history"></span>
+                    <span>Historical Perimeters</span>
+                  </div>
+                  <span class="badge-count" id="count-history">0</span>
+                </div>
               </label>
             </div>
-            <div class="opacity-slider-row">
-              <label for="fesm-opacity">Opacity: <span id="fesm-opacity-val">70%</span></label>
-              <input type="range" id="fesm-opacity" min="0" max="100" value="70">
-            </div>
-            <div class="wms-caveat">
-              Validated canopy & understorey machine-learning model (FESM v1).
-            </div>
-          </div>
 
-          <!-- Basemap Selector -->
-          <div class="form-group basemap-selector">
-            <label>Basemap Style</label>
-            <div class="radio-group">
-              <label><input type="radio" name="basemap" value="dark" checked> Dark Canvas</label>
-              <label><input type="radio" name="basemap" value="ofmDark"> Vector Dark</label>
-              <label><input type="radio" name="basemap" value="liberty"> OpenFreeMap</label>
-              <label><input type="radio" name="basemap" value="imagery"> Satellite</label>
+            <!-- Basemap Selector Buttons -->
+            <div class="basemap-group">
+              <label class="section-label">Basemap</label>
+              <div class="basemap-pill-selector">
+                <button class="basemap-btn active" data-style="dark">Dark Canvas</button>
+                <button class="basemap-btn" data-style="ofmDark">Vector Dark</button>
+                <button class="basemap-btn" data-style="imagery">Satellite</button>
+              </div>
+            </div>
+
+            <!-- FESM Burn Severity WMS Overlay -->
+            <div class="wms-toggle-box">
+              <label class="wms-label">
+                <input type="checkbox" id="layer-toggle-fesm">
+                <span>FESM Fire Severity Overlay</span>
+              </label>
+              <div class="opacity-row">
+                <label for="fesm-opacity">Opacity: <span id="fesm-opacity-val">70%</span></label>
+                <input type="range" id="fesm-opacity" min="0" max="100" value="70">
+              </div>
             </div>
           </div>
         </div>
@@ -163,14 +171,17 @@
         <!-- The MapLibre Container -->
         <div id="map-container" class="map-container"></div>
 
-        <!-- Feature Provenance Drawer (Slide-out on click) -->
+        <!-- Interactive Slide-Over Fire Inspector Card -->
         <aside id="feature-drawer" class="feature-drawer hidden">
           <div class="drawer-header">
-            <h3 id="drawer-title">Feature Details</h3>
-            <button id="btn-close-drawer" class="btn-icon">✕</button>
+            <div class="drawer-title-box">
+              <span class="drawer-pretitle">SELECTED EVENT</span>
+              <h3 id="drawer-title">Feature Details</h3>
+            </div>
+            <button id="btn-close-drawer" class="btn-close">✕</button>
           </div>
           <div class="drawer-body" id="drawer-body">
-            <!-- Dynamically populated -->
+            <!-- Dynamically populated with Hero Stats and Find Similar Button -->
           </div>
         </aside>
       </div>
@@ -179,15 +190,14 @@
     <!-- WORKSPACE 2: INCIDENT & HISTORY EXPLORER + SIMILARITY ENGINE -->
     <section id="workspace-explorer" class="workspace-panel">
       <div class="explorer-layout">
-        <div class="explorer-sidebar">
-          <div class="explorer-nav-tabs">
-            <button id="btn-show-incidents" class="tab-btn active">Active Incidents</button>
-            <button id="btn-show-history" class="tab-btn">Historical Fires</button>
-          </div>
-
-          <!-- Search & Filters -->
-          <div class="filter-box">
-            <input type="text" id="explorer-search" class="form-control" placeholder="Search by fire name or council...">
+        
+        <!-- Left Column: Master Table & Filter Controls -->
+        <div class="explorer-table-card">
+          <div class="filter-toolbar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="txt-search-events" placeholder="Search by fire name, council area, or season..." class="form-control">
+            </div>
             
             <div class="filter-row">
               <div class="form-group">
@@ -197,23 +207,17 @@
                   <option value="Emergency Warning">Emergency Warning</option>
                   <option value="Watch and Act">Watch and Act</option>
                   <option value="Advice">Advice</option>
-                  <option value="Not Applicable">Not Applicable</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label for="filter-firetype">Fire Type</label>
+                <label for="filter-firetype">Fire Classification</label>
                 <select id="filter-firetype" class="form-control-sm">
                   <option value="">All Types</option>
                   <option value="Wildfire">Wildfire</option>
-                  <option value="Prescribed Burn">Prescribed Burn</option>
+                  <option value="Prescribed Burn">Prescribed Hazard Reduction</option>
                 </select>
               </div>
-            </div>
-
-            <div class="form-group">
-              <label for="filter-minarea">Min Area: <span id="lbl-minarea">0 ha</span></label>
-              <input type="range" id="filter-minarea" min="0" max="100000" step="500" value="0">
             </div>
           </div>
 
@@ -223,9 +227,9 @@
               <thead>
                 <tr>
                   <th>Event Name</th>
-                  <th>Level / Type</th>
-                  <th>Area</th>
-                  <th>Location</th>
+                  <th>Classification</th>
+                  <th>Estimated Area</th>
+                  <th>Location / Council</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -236,114 +240,104 @@
           </div>
         </div>
 
-        <!-- Similarity Comparator Panel -->
+        <!-- Right Column: Deterministic 4-Factor Similarity Comparator -->
         <div class="similarity-panel" id="similarity-panel">
           <div class="sim-header">
-            <h3>Similar Historical Events Engine</h3>
-            <p class="sim-subtitle">Multi-factor deterministic C++20 scoring based on Geography, Log-Area, Seasonality, and Category.</p>
+            <div class="sim-header-icon">✨</div>
+            <div>
+              <h3>Historical Fire Analogue Matcher</h3>
+              <p class="sim-subtitle">Multi-factor deterministic scoring: Geography (35%), Scale (25%), Seasonality (20%), and Fire Type (20%).</p>
+            </div>
           </div>
 
           <div id="sim-reference-card" class="sim-ref-card">
-            <div class="empty-state">Select any event from the table to calculate top historically similar fires.</div>
+            <div class="empty-state">
+              <div class="empty-state-icon">🔥</div>
+              <p>Select any fire from the table or click on the map to find historically similar fires.</p>
+            </div>
           </div>
 
           <div id="sim-results" class="sim-results-list">
-            <!-- Dynamically populated with explainable breakdown charts -->
-          </div>
-
-          <div class="sim-disclaimer">
-            <strong>Mandatory Scientific Caveat:</strong> Statistical attribute similarity reflects historical archive comparisons only and does not predict future fire behaviour, spread, or risk.
+            <!-- Dynamically populated with explainable breakdown cards -->
           </div>
         </div>
+
       </div>
     </section>
 
-    <!-- WORKSPACE 3: SATELLITE SCENE SEARCH & PRE/POST CHANGE INSPECTOR -->
+    <!-- WORKSPACE 3: SATELLITE & SPECTRAL INDICES INSPECTOR -->
     <section id="workspace-satellite" class="workspace-panel">
       <div class="satellite-layout">
-        <!-- STAC Query & Controls -->
-        <div class="stac-sidebar">
-          <h3>Sentinel-2 & STAC Discovery</h3>
-          <p class="text-sm">Query Digital Earth Australia and Copernicus Sentinel-2 Level-2A Analysis Ready Data (ARD).</p>
-
-          <div class="form-group">
-            <label for="stac-preset">Preset Historical Study Areas</label>
-            <select id="stac-preset" class="form-control">
-              <option value="gospers">Gospers Mountain (Wollemi 2019-20)</option>
-              <option value="dunns">Dunns Road (Snowy Monaro 2020)</option>
-              <option value="currowan">Currowan (South Coast 2019-20)</option>
-              <option value="warrumbungle">Warrumbungle (2013)</option>
-            </select>
+        
+        <div class="satellite-card">
+          <div class="card-header">
+            <h3>Remote Sensing Spectral Index Guide</h3>
+            <span class="badge badge-live">Sentinel-2 MSI Analysis Ready Data</span>
           </div>
 
-          <div class="form-group">
-            <label for="spectral-mode-select">Optical & Spectral Mode</label>
+          <div class="spectral-mode-selector">
+            <label for="spectral-mode-select">Select Spectral Band Combination:</label>
             <select id="spectral-mode-select" class="form-control">
-              <option value="true-colour">True Colour RGB (B04, B03, B02)</option>
-              <option value="false-colour-swir">False Colour SWIR Burn Scar (B12, B8A, B04)</option>
-              <option value="ndvi">NDVI Vegetation Health (B08, B04)</option>
-              <option value="dnbr">NBR / dNBR Burn Severity (B08, B12)</option>
+              <option value="true-colour">True Colour (Natural RGB) — B04, B03, B02</option>
+              <option value="false-colour-swir" selected>False Colour SWIR (Burn Scar Emphasis) — B12, B8A, B04</option>
+              <option value="ndvi">NDVI (Vegetation Photosynthetic Health) — (B08 - B04)/(B08 + B04)</option>
+              <option value="dnbr">dNBR (Differenced Normalized Burn Ratio) — NBR_pre - NBR_post</option>
             </select>
           </div>
 
-          <div class="form-group">
-            <label for="stac-cloud-slider">Max Cloud Cover: <span id="lbl-cloud">20%</span></label>
-            <input type="range" id="stac-cloud-slider" min="0" max="100" value="20">
+          <div class="spectral-detail-box" id="spectral-detail-box">
+            <h4 id="spec-name" class="spec-title">False Colour SWIR (Burn Scar Emphasis)</h4>
+            <div class="spec-formula-box">
+              <code>Formula: <span id="spec-formula">R = B12 (SWIR-2), G = B8A (Narrow NIR), B = B04 (Red)</span></code>
+            </div>
+            <p id="spec-desc" class="spec-desc">Combines Short-Wave Infrared with Near-Infrared to penetrate atmospheric smoke haze and highlight charred organic matter.</p>
+            <div id="spec-caveat" class="spec-caveat">
+              <strong>Scientific Caveat:</strong> SWIR bands have 20m spatial resolution. Bare dry red soil or rocky terrain can mimic burn scar reflectance.
+            </div>
           </div>
 
-          <button id="btn-query-stac" class="btn-primary w-full">Search STAC Scenes</button>
-
-          <!-- Spectral Index Disclosure Card -->
-          <div class="spectral-card" id="spectral-card">
-            <h4 id="spec-name">True Colour (Natural RGB)</h4>
-            <div class="spec-formula" id="spec-formula">R = B04, G = B03, B = B02</div>
-            <p id="spec-desc" class="spec-desc">Simulates human visual perception using visible light bands.</p>
-            <div class="spec-caveat" id="spec-caveat">
-              <strong>Caveat:</strong> Cannot penetrate thick smoke or cloud. Cannot reliably distinguish dark shadow from light burn scars.
+          <div class="stac-query-box">
+            <h4>Query Geoscience Australia STAC Scenes</h4>
+            <div class="stac-controls">
+              <div class="form-group">
+                <label for="stac-preset">Target Area</label>
+                <select id="stac-preset" class="form-control">
+                  <option value="wollemi">Wollemi / Hawkesbury (Black Summer 2019-20)</option>
+                  <option value="currowan">Shoalhaven / Currowan (Black Summer 2019-20)</option>
+                  <option value="snowy">Snowy Valleys / Dunns Rd (Black Summer 2019-20)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="stac-cloud-slider">Max Cloud Cover: <span id="lbl-cloud">20%</span></label>
+                <input type="range" id="stac-cloud-slider" min="0" max="100" value="20">
+              </div>
+              <button id="btn-query-stac" class="btn-primary">Search STAC Scenes</button>
             </div>
           </div>
         </div>
 
-        <!-- Split / Curtain Swipe Comparator -->
-        <div class="stac-viewer">
-          <div class="viewer-header">
-            <div class="viewer-badge pre">PRE-FIRE SCENE (OCT 2019)</div>
-            <div class="viewer-title">Interactive Multi-Temporal Change Comparator</div>
-            <div class="viewer-badge post">POST-FIRE SCENE (FEB 2020)</div>
-          </div>
-
-          <div class="comparison-container" id="comparison-container">
-            <div class="scene-half pre-half">
-              <div class="scene-image pre-img" id="img-pre"></div>
-              <div class="scene-overlay-label">Pre-Fire Reflectance (Sentinel-2A MSI)</div>
-            </div>
-            <div class="scene-half post-half">
-              <div class="scene-image post-img" id="img-post"></div>
-              <div class="scene-overlay-label">Post-Fire Burn Scar (Sentinel-2B MSI)</div>
-            </div>
-            <div class="split-slider-line"></div>
-          </div>
-        </div>
       </div>
     </section>
 
-    <!-- WORKSPACE 4: DATA HEALTH, SETTINGS & EXPORTS -->
+    <!-- WORKSPACE 4: DATA FEEDS, SETTINGS & EXPORTS -->
     <section id="workspace-health" class="workspace-panel">
       <div class="health-layout">
-        <!-- Live Provider Matrix -->
+        
+        <!-- Live Provider Provenance Table -->
         <div class="health-card">
           <div class="card-header">
-            <h3>Live Data Feeds & Provider Provenance Matrix</h3>
-            <button id="btn-force-refresh-all" class="btn-sm">↻ Force Refresh All Feeds</button>
+            <h3>Connected Geospatial Data Feeds</h3>
+            <button id="btn-force-refresh-all" class="btn-sm">↻ Refresh All Feeds</button>
           </div>
-          <table class="data-table">
+          <p class="text-sm">Dual timestamps, authoritative data licenses, and live latency metrics.</p>
+          
+          <table class="data-table" id="provider-status-table">
             <thead>
               <tr>
-                <th>Provider ID</th>
-                <th>Source Name</th>
-                <th>Endpoint / Protocol</th>
+                <th>Feed ID</th>
+                <th>Authoritative Source</th>
                 <th>Licence</th>
-                <th>Freshness Status</th>
+                <th>Status</th>
                 <th>Latency</th>
                 <th>Records</th>
               </tr>
@@ -354,56 +348,42 @@
           </table>
         </div>
 
-        <!-- System Self-Test & Certification Controls -->
+        <!-- NASA FIRMS API Key Configuration -->
         <div class="health-card">
           <div class="card-header">
-            <h3>Runtime Verification & Engine Certification</h3>
-            <button id="btn-run-selftest" class="btn-primary">▶ Run System Self-Test Suite</button>
+            <h3>NASA FIRMS Live API Key</h3>
+            <span class="badge badge-live">Vercel Environment Variable Supported</span>
           </div>
-          <div id="selftest-results" class="selftest-console">
-            Click "Run System Self-Test Suite" to execute runtime assertions against geospatial parsers, the 4-factor mathematical similarity engine, and export sanitizers.
-          </div>
-        </div>
-
-        <!-- Settings: API Key Configuration -->
-        <div class="health-card">
-          <h3>Runtime Configuration & Secret Management</h3>
-          <p class="text-sm">Optional keys are stored securely in local SQLite configuration tables and are never exposed in public assets.</p>
+          <p class="text-sm">You can supply a NASA FIRMS MAP_KEY either in your <strong>Vercel Project Settings → Environment Variables (<code>NASA_FIRMS_MAP_KEY</code>)</strong> or save it locally below:</p>
           <div class="form-group">
-            <label for="txt-firms-key">NASA FIRMS API Key (Optional)</label>
             <div class="input-with-button">
-              <input type="password" id="txt-firms-key" class="form-control" placeholder="Enter NASA MAP_KEY...">
+              <input type="password" id="txt-firms-key" class="form-control" placeholder="Enter NASA FIRMS MAP_KEY...">
               <button id="btn-save-firms-key" class="btn-secondary">Save Key</button>
             </div>
-            <span class="text-xs text-muted">Leave empty to use Geoscience Australia DEA Hotspots with zero API key required.</span>
+            <span class="text-xs text-muted">When left empty, the platform automatically utilizes public Geoscience Australia DEA Hotspots.</span>
           </div>
         </div>
 
-        <!-- Reproducible Research Exporter -->
+        <!-- Reproducible Research Exports -->
         <div class="health-card">
           <h3>Reproducible Research & Dataset Exports</h3>
-          <p class="text-sm">Export currently active records with complete provenance, dual timestamps, and CC BY 4.0 / NASA attribution.</p>
+          <p class="text-sm">Export active fire perimeters, thermal anomalies, and intelligence briefings with full CC BY 4.0 attribution:</p>
           <div class="export-btn-group">
-            <a href="/api/v1/export/geojson" class="btn-export" download="bushfire_memory_export.geojson">
-              📥 RFC 7946 GeoJSON (.geojson)
+            <a href="/api/v1/history" class="btn-export" download="bushfire_history.json">
+              📥 GeoJSON Fire Perimeters (.json)
             </a>
-            <a href="/api/v1/export/csv_incidents" class="btn-export" download="bushfire_incidents.csv">
-              📥 Incidents Table (.csv)
+            <a href="/api/v1/incidents" class="btn-export" download="bushfire_incidents.json">
+              📥 Current Incidents Feed (.json)
             </a>
-            <a href="/api/v1/export/csv_history" class="btn-export" download="bushfire_history.csv">
-              📥 Historical Perimeters (.csv)
-            </a>
-            <a href="/api/v1/export/csv_hotspots" class="btn-export" download="bushfire_hotspots.csv">
-              📥 Thermal Hotspots (.csv)
-            </a>
-            <a href="/api/v1/export/markdown" class="btn-export" download="bushfire_research_briefing.md">
-              📄 Research Briefing (.md)
+            <a href="/api/v1/hotspots" class="btn-export" download="bushfire_hotspots.json">
+              📥 Thermal Hotspots (.json)
             </a>
             <button id="btn-print-report" class="btn-export">
-              🖨️ Print-Ready View
+              🖨️ Print-Ready Summary
             </button>
           </div>
         </div>
+
       </div>
     </section>
 

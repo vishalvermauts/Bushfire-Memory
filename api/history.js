@@ -1,0 +1,202 @@
+// Vercel Serverless Function: Historical Fire Perimeters Archive
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const fires = [
+    {
+      id: "NPWS-HIST-2019-GOSPERS",
+      fireName: "Gospers Mountain",
+      fireSeason: "2019-20",
+      ignitionDateIso: "2019-10-26T13:45:00Z",
+      extinguishedDateIso: "2020-02-10T18:00:00Z",
+      fireType: "Wildfire",
+      areaHa: 512000.0,
+      bioregionOrCouncil: "Hawkesbury / Wollemi",
+      dayOfYear: 299,
+      centroidLng: 150.45,
+      centroidLat: -33.15,
+      bbox: [150.10, -33.55, 150.85, -32.80],
+      geometryJson: {
+        type: "Polygon",
+        coordinates: [[[150.10, -33.10], [150.35, -32.80], [150.80, -32.95], [150.85, -33.45], [150.50, -33.55], [150.10, -33.10]]]
+      },
+      provenance: {
+        providerId: "nsw-npws-history",
+        providerName: "NSW National Parks & Wildlife Service",
+        datasetName: "NPWS Fire History Archive",
+        licence: "CC BY 4.0",
+        freshness: "fallback-snapshot"
+      }
+    },
+    {
+      id: "NPWS-HIST-2019-CURROWAN",
+      fireName: "Currowan",
+      fireSeason: "2019-20",
+      ignitionDateIso: "2019-11-26T10:15:00Z",
+      extinguishedDateIso: "2020-02-09T16:00:00Z",
+      fireType: "Wildfire",
+      areaHa: 314000.0,
+      bioregionOrCouncil: "Shoalhaven / South Coast",
+      dayOfYear: 330,
+      centroidLng: 150.18,
+      centroidLat: -35.52,
+      bbox: [149.85, -35.90, 150.45, -35.15],
+      geometryJson: {
+        type: "Polygon",
+        coordinates: [[[149.85, -35.40], [150.15, -35.15], [150.45, -35.35], [150.35, -35.90], [149.95, -35.75], [149.85, -35.40]]]
+      },
+      provenance: {
+        providerId: "nsw-npws-history",
+        providerName: "NSW National Parks & Wildlife Service",
+        freshness: "fallback-snapshot"
+      }
+    },
+    {
+      id: "NPWS-HIST-2019-DUNNS",
+      fireName: "Dunns Road",
+      fireSeason: "2019-20",
+      ignitionDateIso: "2019-12-28T14:30:00Z",
+      extinguishedDateIso: "2020-02-18T12:00:00Z",
+      fireType: "Wildfire",
+      areaHa: 333000.0,
+      bioregionOrCouncil: "Snowy Valleys / Riverina",
+      dayOfYear: 362,
+      centroidLng: 148.15,
+      centroidLat: -35.65,
+      bbox: [147.80, -36.05, 148.50, -35.30],
+      geometryJson: {
+        type: "Polygon",
+        coordinates: [[[147.80, -35.55], [148.10, -35.30], [148.50, -35.50], [148.45, -36.05], [147.95, -35.95], [147.80, -35.55]]]
+      },
+      provenance: {
+        providerId: "nsw-npws-history",
+        providerName: "NSW National Parks & Wildlife Service",
+        freshness: "fallback-snapshot"
+      }
+    },
+    {
+      id: "NPWS-HIST-2019-GREENWATTLE",
+      fireName: "Green Wattle Creek",
+      fireSeason: "2019-20",
+      ignitionDateIso: "2019-11-27T16:00:00Z",
+      extinguishedDateIso: "2020-02-10T14:00:00Z",
+      fireType: "Wildfire",
+      areaHa: 278000.0,
+      bioregionOrCouncil: "Wollondilly / Southern Highlands",
+      dayOfYear: 331,
+      centroidLng: 150.32,
+      centroidLat: -34.18,
+      bbox: [150.05, -34.50, 150.60, -33.90],
+      geometryJson: {
+        type: "Polygon",
+        coordinates: [[[150.05, -34.15], [150.30, -33.90], [150.60, -34.10], [150.55, -34.50], [150.15, -34.45], [150.05, -34.15]]]
+      },
+      provenance: {
+        providerId: "nsw-npws-history",
+        providerName: "NSW National Parks & Wildlife Service",
+        freshness: "fallback-snapshot"
+      }
+    },
+    {
+      id: "NPWS-HIST-2013-WARRUMBUNGLE",
+      fireName: "Warrumbungle National Park",
+      fireSeason: "2012-13",
+      ignitionDateIso: "2013-01-12T11:00:00Z",
+      extinguishedDateIso: "2013-02-05T17:00:00Z",
+      fireType: "Wildfire",
+      areaHa: 56000.0,
+      bioregionOrCouncil: "Warrumbungle / Coonabarabran",
+      dayOfYear: 12,
+      centroidLng: 149.02,
+      centroidLat: -31.28,
+      bbox: [148.85, -31.45, 149.20, -31.15],
+      geometryJson: {
+        type: "Polygon",
+        coordinates: [[[148.85, -31.25], [149.05, -31.15], [149.20, -31.30], [149.15, -31.45], [148.90, -31.40], [148.85, -31.25]]]
+      },
+      provenance: {
+        providerId: "nsw-npws-history",
+        providerName: "NSW National Parks & Wildlife Service",
+        freshness: "fallback-snapshot"
+      }
+    },
+    {
+      id: "NPWS-HIST-2003-CANBERRA",
+      fireName: "Brindabella & McIntyre's Hut",
+      fireSeason: "2002-03",
+      ignitionDateIso: "2003-01-08T15:20:00Z",
+      extinguishedDateIso: "2003-01-28T18:00:00Z",
+      fireType: "Wildfire",
+      areaHa: 160000.0,
+      bioregionOrCouncil: "ACT / Brindabella",
+      dayOfYear: 8,
+      centroidLng: 148.88,
+      centroidLat: -35.32,
+      bbox: [148.60, -35.60, 149.15, -35.10],
+      geometryJson: {
+        type: "Polygon",
+        coordinates: [[[148.60, -35.25], [148.90, -35.10], [149.15, -35.30], [149.05, -35.60], [148.70, -35.50], [148.60, -35.25]]]
+      },
+      provenance: {
+        providerId: "nsw-npws-history",
+        providerName: "NSW National Parks & Wildlife Service",
+        freshness: "fallback-snapshot"
+      }
+    },
+    {
+      id: "NPWS-HIST-2023-ROYAL-PB",
+      fireName: "Royal NP Garie Ridge HR",
+      fireSeason: "2023-24",
+      ignitionDateIso: "2023-08-15T09:00:00Z",
+      extinguishedDateIso: "2023-08-17T17:00:00Z",
+      fireType: "Prescribed Burn",
+      areaHa: 450.0,
+      bioregionOrCouncil: "Sutherland Shire",
+      dayOfYear: 227,
+      centroidLng: 151.08,
+      centroidLat: -34.15,
+      bbox: [151.05, -34.18, 151.11, -34.12],
+      geometryJson: {
+        type: "Polygon",
+        coordinates: [[[151.05, -34.14], [151.09, -34.12], [151.11, -34.16], [151.07, -34.18], [151.05, -34.14]]]
+      },
+      provenance: {
+        providerId: "nsw-npws-history",
+        providerName: "NSW National Parks & Wildlife Service",
+        freshness: "fallback-snapshot"
+      }
+    },
+    {
+      id: "NPWS-HIST-2022-BLUEMT-PB",
+      fireName: "Sublime Point Leura HR",
+      fireSeason: "2022-23",
+      ignitionDateIso: "2022-09-02T10:00:00Z",
+      extinguishedDateIso: "2022-09-04T16:00:00Z",
+      fireType: "Prescribed Burn",
+      areaHa: 180.0,
+      bioregionOrCouncil: "Blue Mountains",
+      dayOfYear: 245,
+      centroidLng: 150.34,
+      centroidLat: -33.74,
+      bbox: [150.32, -33.76, 150.36, -33.72],
+      geometryJson: {
+        type: "Polygon",
+        coordinates: [[[150.32, -33.73], [150.35, -33.72], [150.36, -33.75], [150.33, -33.76], [150.32, -33.73]]]
+      },
+      provenance: {
+        providerId: "nsw-npws-history",
+        providerName: "NSW National Parks & Wildlife Service",
+        freshness: "fallback-snapshot"
+      }
+    }
+  ];
+
+  res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
+  return res.status(200).json(fires);
+}

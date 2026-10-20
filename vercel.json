@@ -21,11 +21,12 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/v1/incidents", "destination": "/api/incidents.json" },
-    { "source": "/api/v1/hotspots", "destination": "/api/hotspots.json" },
-    { "source": "/api/v1/history", "destination": "/api/history.json" },
-    { "source": "/api/v1/status", "destination": "/api/status.json" },
-    { "source": "/api/v1/health", "destination": "/api/status.json" },
+    { "source": "/api/v1/incidents", "destination": "/api/incidents" },
+    { "source": "/api/v1/hotspots", "destination": "/api/hotspots" },
+    { "source": "/api/v1/history", "destination": "/api/history" },
+    { "source": "/api/v1/similarity", "destination": "/api/similarity" },
+    { "source": "/api/v1/status", "destination": "/api/status" },
+    { "source": "/api/v1/health", "destination": "/api/status" },
     { "source": "/api/v1/satellite/modes", "destination": "/api/satellite_modes.json" }
   ]
 }

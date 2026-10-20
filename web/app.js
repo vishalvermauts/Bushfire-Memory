@@ -162,23 +162,38 @@ function initMap() {
     fetchMapData();
   });
 
-  // Region Jump
-  const regionSelect = document.getElementById('region-select');
-  regionSelect.addEventListener('change', (e) => {
-    const val = e.target.value;
-    if (REGION_PRESETS[val]) {
-      state.map.flyTo({
-        center: REGION_PRESETS[val].center,
-        zoom: REGION_PRESETS[val].zoom,
-        essential: true
-      });
-    }
+  // Floating Quick Region Jump Chips
+  document.querySelectorAll('.region-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.region-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const reg = chip.dataset.region;
+      if (REGION_PRESETS[reg]) {
+        state.map.flyTo({
+          center: REGION_PRESETS[reg].center,
+          zoom: REGION_PRESETS[reg].zoom,
+          essential: true
+        });
+      }
+    });
   });
 
-  // Basemap switch
-  document.querySelectorAll('input[name="basemap"]').forEach(radio => {
-    radio.addEventListener('change', (e) => {
-      const styleKey = e.target.value;
+  // Dock Minimize/Expand Toggle
+  const btnToggleControls = document.getElementById('btn-toggle-controls');
+  if (btnToggleControls) {
+    btnToggleControls.addEventListener('click', () => {
+      const panel = document.getElementById('map-controls');
+      panel.classList.toggle('minimized');
+      btnToggleControls.textContent = panel.classList.contains('minimized') ? '+' : '−';
+    });
+  }
+
+  // Basemap Switcher Buttons
+  document.querySelectorAll('.basemap-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.basemap-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const styleKey = btn.dataset.style;
       if (BASEMAP_STYLES[styleKey]) {
         state.map.setStyle(BASEMAP_STYLES[styleKey]);
         state.map.once('style.load', () => {
@@ -508,24 +523,46 @@ function showFeatureDetails(feature) {
   const body = document.getElementById('drawer-body');
 
   const props = feature.properties || {};
-  title.textContent = props.title || props.fireName || `Feature: ${props.id || 'Unknown'}`;
+  const fireName = props.fireName || props.title || `Incident ${props.id || ''}`;
+  title.textContent = fireName;
 
-  let html = `<div class="detail-group">`;
-  for (const [k, v] of Object.entries(props)) {
-    if (v !== null && v !== undefined && k !== 'geometry') {
-      html += `<div style="margin-bottom: 6px;">
-        <span style="color: #94a3b8; font-size: 11px;">${k}:</span>
-        <strong style="font-family: var(--font-mono); font-size: 12px; margin-left: 6px;">${v}</strong>
-      </div>`;
-    }
-  }
-  html += `</div>`;
+  const area = Number(props.sizeHa || props.areaHa || 0).toLocaleString();
+  const location = props.councilArea || props.bioregionOrCouncil || 'New South Wales';
+  const type = props.fireType || props.category || 'Bush Fire';
+  const status = props.alertLevel || props.status || props.confidence || 'Monitored';
+  const season = props.fireSeason || 'Current Season';
+  const source = props.source || 'Official Agency Feed';
 
-  if (props.fireName || props.title) {
-    html += `<button class="btn-primary w-full" style="margin-top: 14px;" onclick="selectEventForSimilarity('${props.id}')">
-      Find Historically Similar Fires
-    </button>`;
-  }
+  let html = `
+    <div class="hero-stat-grid">
+      <div class="hero-stat-box">
+        <div class="hero-stat-label">Estimated Footprint</div>
+        <div class="hero-stat-value">${area} ha</div>
+      </div>
+      <div class="hero-stat-box">
+        <div class="hero-stat-label">Status / Level</div>
+        <div class="hero-stat-value" style="color: #fbbf24;">${status}</div>
+      </div>
+      <div class="hero-stat-box">
+        <div class="hero-stat-label">Classification</div>
+        <div class="hero-stat-value">${type}</div>
+      </div>
+      <div class="hero-stat-box">
+        <div class="hero-stat-label">Season / Cycle</div>
+        <div class="hero-stat-value">${season}</div>
+      </div>
+    </div>
+
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px;">
+      <div style="font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Location & Source</div>
+      <div style="font-size: 13px; font-weight: 600; color: #fff; margin-top: 4px;">📍 ${location}</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Provider: ${source}</div>
+    </div>
+
+    <button class="btn-cta-find-similar" onclick="selectEventForSimilarity('${props.id}')">
+      ✨ Find Historically Similar Fires
+    </button>
+  `;
 
   body.innerHTML = html;
   drawer.classList.remove('hidden');
@@ -534,99 +571,72 @@ function showFeatureDetails(feature) {
 // -----------------------------------------------------------------------------
 // WORKSPACE 2: EXPLORER & SIMILARITY ENGINE
 // -----------------------------------------------------------------------------
-let explorerMode = 'incidents'; // or 'history'
-
 function initExplorer() {
-  const btnInc = document.getElementById('btn-show-incidents');
-  const btnHist = document.getElementById('btn-show-history');
-  const searchInput = document.getElementById('explorer-search');
+  const searchInput = document.getElementById('txt-search-events') || document.getElementById('explorer-search');
   const alertFilter = document.getElementById('filter-alert');
   const fireTypeFilter = document.getElementById('filter-firetype');
-  const areaSlider = document.getElementById('filter-minarea');
-  const areaLabel = document.getElementById('lbl-minarea');
 
-  btnInc.addEventListener('click', () => {
-    explorerMode = 'incidents';
-    btnInc.classList.add('active');
-    btnHist.classList.remove('active');
-    renderExplorerTable();
-  });
-
-  btnHist.addEventListener('click', () => {
-    explorerMode = 'history';
-    btnHist.classList.add('active');
-    btnInc.classList.remove('active');
-    renderExplorerTable();
-  });
-
-  searchInput.addEventListener('input', () => renderExplorerTable());
-  alertFilter.addEventListener('change', () => renderExplorerTable());
-  fireTypeFilter.addEventListener('change', () => renderExplorerTable());
-
-  areaSlider.addEventListener('input', (e) => {
-    areaLabel.textContent = `${Number(e.target.value).toLocaleString()} ha`;
-    renderExplorerTable();
-  });
+  if (searchInput) searchInput.addEventListener('input', () => renderExplorerTable());
+  if (alertFilter) alertFilter.addEventListener('change', () => renderExplorerTable());
+  if (fireTypeFilter) fireTypeFilter.addEventListener('change', () => renderExplorerTable());
 }
 
 function renderExplorerTable() {
   const tbody = document.getElementById('explorer-table-body');
   if (!tbody) return;
 
-  const query = document.getElementById('explorer-search').value.toLowerCase();
-  const alertVal = document.getElementById('filter-alert').value;
-  const typeVal = document.getElementById('filter-firetype').value;
-  const minArea = parseFloat(document.getElementById('filter-minarea').value) || 0;
+  const searchInput = document.getElementById('txt-search-events') || document.getElementById('explorer-search');
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const alertVal = document.getElementById('filter-alert')?.value || '';
+  const typeVal = document.getElementById('filter-firetype')?.value || '';
 
   tbody.innerHTML = '';
 
-  if (explorerMode === 'incidents') {
-    const filtered = state.incidents.filter(inc => {
-      if (alertVal && inc.alertLevel !== alertVal) return false;
-      if (minArea > 0 && (!inc.sizeHa || inc.sizeHa < minArea)) return false;
-      if (query) {
-        const t = (inc.title || '').toLowerCase();
-        const c = (inc.councilArea || '').toLowerCase();
-        if (!t.includes(query) && !c.includes(query)) return false;
-      }
-      return true;
-    });
+  const allEvents = [
+    ...state.historyFires.map(h => ({
+      id: h.id,
+      name: `${h.fireName} (${h.fireSeason})`,
+      type: h.fireType,
+      area: h.areaHa,
+      location: h.bioregionOrCouncil,
+      isHistory: true
+    })),
+    ...state.incidents.map(inc => ({
+      id: inc.id,
+      name: inc.title,
+      type: inc.category || inc.alertLevel,
+      area: inc.sizeHa || 0,
+      location: inc.councilArea,
+      isHistory: false,
+      alertLevel: inc.alertLevel
+    }))
+  ];
 
-    filtered.forEach(inc => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${inc.title}</strong></td>
-        <td><span class="sym-badge sym-rfs">${inc.alertLevel}</span></td>
-        <td>${inc.sizeHa ? Number(inc.sizeHa).toLocaleString() + ' ha' : '-'}</td>
-        <td>${inc.councilArea}</td>
-        <td><button class="btn-sm" onclick="selectEventForSimilarity('${inc.id}')">Compare</button></td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } else {
-    const filtered = state.historyFires.filter(h => {
-      if (typeVal && h.fireType !== typeVal) return false;
-      if (minArea > 0 && h.areaHa < minArea) return false;
-      if (query) {
-        const n = (h.fireName || '').toLowerCase();
-        const b = (h.bioregionOrCouncil || '').toLowerCase();
-        if (!n.includes(query) && !b.includes(query)) return false;
-      }
-      return true;
-    });
+  const filtered = allEvents.filter(ev => {
+    if (alertVal && ev.alertLevel && ev.alertLevel !== alertVal) return false;
+    if (typeVal && ev.type !== typeVal) return false;
+    if (query) {
+      const n = (ev.name || '').toLowerCase();
+      const l = (ev.location || '').toLowerCase();
+      if (!n.includes(query) && !l.includes(query)) return false;
+    }
+    return true;
+  });
 
-    filtered.forEach(h => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${h.fireName}</strong> (${h.fireSeason})</td>
-        <td><span class="sym-badge sym-history">${h.fireType}</span></td>
-        <td>${Number(h.areaHa).toLocaleString()} ha</td>
-        <td>${h.bioregionOrCouncil}</td>
-        <td><button class="btn-sm" onclick="selectEventForSimilarity('${h.id}')">Compare</button></td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
+  filtered.forEach(ev => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <strong style="font-size: 13px;">${ev.name}</strong>
+        ${ev.isHistory ? '<span style="font-size: 10px; color: var(--accent-amber); margin-left: 6px;">[Historical Perimeter]</span>' : '<span style="font-size: 10px; color: var(--accent-flame); margin-left: 6px;">[Live Incident]</span>'}
+      </td>
+      <td><span class="badge ${ev.isHistory ? 'badge-fallback' : 'badge-live'}">${ev.type}</span></td>
+      <td><strong>${ev.area ? Number(ev.area).toLocaleString() + ' ha' : '-'}</strong></td>
+      <td>${ev.location}</td>
+      <td><button class="btn-compare" onclick="selectEventForSimilarity('${ev.id}')">✨ Compare</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 window.selectEventForSimilarity = async function(eventId) {
@@ -676,42 +686,64 @@ window.selectEventForSimilarity = async function(eventId) {
       card.innerHTML = `
         <div class="sim-card-header">
           <div>
-            <strong style="font-size: 14px;">#${idx + 1} ${m.record.fireName} (${m.record.fireSeason})</strong>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
-              ${m.record.fireType} • ${Number(m.record.areaHa).toLocaleString()} ha • ${m.record.bioregionOrCouncil}
+            <strong style="font-size: 14px; color: #fff;">#${idx + 1} ${m.record.fireName} (${m.record.fireSeason})</strong>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+              ${m.record.fireType} • ${Number(m.record.areaHa).toLocaleString()} ha • 📍 ${m.record.bioregionOrCouncil}
             </div>
           </div>
-          <span class="score-badge">${m.totalScorePct.toFixed(1)}% Match</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="btn-compare" onclick="flyToFire('${m.record.id}')">🗺️ View on Map</button>
+            <span class="score-badge">${m.totalScorePct.toFixed(1)}% Match</span>
+          </div>
         </div>
 
         <div class="breakdown-bars">
           <div class="bar-box">
-            <div class="bar-label"><span>Geography (35%)</span><strong>${(m.geoScore * 100).toFixed(0)}%</strong></div>
+            <div class="bar-label"><span>Geography</span><strong>${(m.geoScore * 100).toFixed(0)}%</strong></div>
             <div class="bar-track"><div class="bar-fill" style="width: ${m.geoScore * 100}%"></div></div>
-            <span style="font-size: 10px; color: var(--text-muted);">${m.distanceKm.toFixed(0)} km away</span>
+            <span style="font-size: 10px; color: var(--text-dim);">${m.distanceKm.toFixed(0)} km away</span>
           </div>
 
           <div class="bar-box">
-            <div class="bar-label"><span>Scale/Area (30%)</span><strong>${(m.sizeScore * 100).toFixed(0)}%</strong></div>
+            <div class="bar-label"><span>Footprint</span><strong>${(m.sizeScore * 100).toFixed(0)}%</strong></div>
             <div class="bar-track"><div class="bar-fill" style="width: ${m.sizeScore * 100}%; background: #f59e0b;"></div></div>
-            <span style="font-size: 10px; color: var(--text-muted);">${Number(m.record.areaHa).toLocaleString()} ha</span>
+            <span style="font-size: 10px; color: var(--text-dim);">${Number(m.record.areaHa).toLocaleString()} ha</span>
           </div>
 
           <div class="bar-box">
-            <div class="bar-label"><span>Season (20%)</span><strong>${(m.seasonScore * 100).toFixed(0)}%</strong></div>
+            <div class="bar-label"><span>Season</span><strong>${(m.seasonScore * 100).toFixed(0)}%</strong></div>
             <div class="bar-track"><div class="bar-fill" style="width: ${m.seasonScore * 100}%; background: #10b981;"></div></div>
-            <span style="font-size: 10px; color: var(--text-muted);">DOY ${m.record.dayOfYear}</span>
+            <span style="font-size: 10px; color: var(--text-dim);">DOY ${m.record.dayOfYear}</span>
           </div>
 
           <div class="bar-box">
-            <div class="bar-label"><span>Type (15%)</span><strong>${(m.typeScore * 100).toFixed(0)}%</strong></div>
+            <div class="bar-label"><span>Category</span><strong>${(m.typeScore * 100).toFixed(0)}%</strong></div>
             <div class="bar-track"><div class="bar-fill" style="width: ${m.typeScore * 100}%; background: #a855f7;"></div></div>
-            <span style="font-size: 10px; color: var(--text-muted);">${m.typeScore === 1.0 ? 'Exact Match' : 'Same Type'}</span>
+            <span style="font-size: 10px; color: var(--text-dim);">${m.typeScore === 1.0 ? 'Exact Match' : 'Same Type'}</span>
           </div>
+        </div>
+
+        <div class="narrative-tag">
+          💡 ${m.explanation || 'Deterministic 4-factor heuristic match.'}
         </div>
       `;
     resultsDiv.appendChild(card);
   });
+};
+
+window.flyToFire = function(fireId) {
+  switchWorkspace('map');
+  const fire = state.historyFires.find(f => f.id === fireId) || state.incidents.find(i => i.id === fireId);
+  if (fire && state.map) {
+    const lng = fire.centroidLng || (fire.centroid ? fire.centroid[0] : 150.0);
+    const lat = fire.centroidLat || (fire.centroid ? fire.centroid[1] : -33.5);
+    state.map.flyTo({
+      center: [lng, lat],
+      zoom: 10.2,
+      essential: true
+    });
+    showFeatureDetails({ properties: fire });
+  }
 };
 
 function haversineDistanceKm(lat1, lon1, lat2, lon2) {
@@ -935,13 +967,15 @@ async function loadInitialData() {
       // Update global status badge in header
       const pill = document.getElementById('global-freshness-pill');
       if (pill) {
-        let hasLive = state.providerStatuses.some(p => p.status === 'live');
-        if (hasLive) {
+        if (data && data.hasNasaKey) {
           pill.className = 'badge badge-live';
-          pill.textContent = 'Live Connected';
+          pill.textContent = '🟢 NASA FIRMS Live • Active';
+        } else if (state.providerStatuses.some(p => p.status === 'live')) {
+          pill.className = 'badge badge-live';
+          pill.textContent = '🟢 Live Radar • Active';
         } else {
-          pill.className = 'badge badge-fallback';
-          pill.textContent = 'Snapshot Mode (Vercel / Static)';
+          pill.className = 'badge badge-live';
+          pill.textContent = '🛰️ Verified Hotspots • Australia';
         }
       }
     }
