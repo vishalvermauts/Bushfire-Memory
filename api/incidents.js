@@ -55,8 +55,10 @@ export default async function handler(req, res) {
           responsibleAgency: 'NSW Rural Fire Service',
           sizeHa: sizeHa || 50.0,
           isFire: true,
+          centroid: centroid,
           centroidLng: centroid[0],
           centroidLat: centroid[1],
+          geometry: geom,
           geometryJson: geom,
           updatedAtIso: new Date().toISOString(),
           provenance: {

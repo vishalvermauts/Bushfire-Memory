@@ -311,16 +311,22 @@ function setupMapLayers() {
       type: 'circle',
       source: 'source-hotspots',
       paint: {
-        'circle-color': '#f97316',
+        'circle-color': [
+          'interpolate', ['linear'], ['coalesce', ['get', 'frpMw'], 10],
+          5, '#f59e0b',
+          25, '#f97316',
+          100, '#ef4444',
+          300, '#b91c1c'
+        ],
         'circle-radius': [
           'interpolate', ['linear'], ['coalesce', ['get', 'frpMw'], 10],
-          5, 4,
-          50, 10,
-          200, 18
+          5, 3.5,
+          50, 7.5,
+          200, 14
         ],
-        'circle-stroke-color': '#fff',
+        'circle-stroke-color': '#ffffff',
         'circle-stroke-width': 1,
-        'circle-opacity': 0.85
+        'circle-opacity': 0.88
       }
     });
   }
@@ -454,23 +460,42 @@ async function fetchMapData(force = false) {
 function updateMapSources() {
   if (!state.map || !state.mapLoaded) return;
 
-  // Convert incidents to GeoJSON FeatureCollection
-  const incFeatures = state.incidents.map(inc => ({
-    type: 'Feature',
-    id: inc.id,
-    geometry: inc.geometry || { type: 'Point', coordinates: inc.centroid },
-    properties: {
-      id: inc.id,
-      title: inc.title,
-      alertLevel: inc.alertLevel,
-      status: inc.status,
-      category: inc.category,
-      councilArea: inc.councilArea,
-      sizeHa: inc.sizeHa,
-      source: inc.provenance ? inc.provenance.providerName : 'NSW RFS',
-      freshness: inc.provenance ? inc.provenance.freshness : 'fallback-snapshot'
+  const incFeatures = state.incidents.map(inc => {
+    let geom = inc.geometry || inc.geometryJson;
+    if (!geom || !geom.type) {
+      if (inc.centroidLng != null && inc.centroidLat != null) {
+        geom = { type: 'Point', coordinates: [Number(inc.centroidLng), Number(inc.centroidLat)] };
+      } else if (Array.isArray(inc.centroid)) {
+        geom = { type: 'Point', coordinates: inc.centroid };
+      } else {
+        geom = { type: 'Point', coordinates: [150.0, -33.5] };
+      }
     }
-  }));
+    if (geom.type === 'GeometryCollection' && Array.isArray(geom.geometries)) {
+      const pt = geom.geometries.find(g => g.type === 'Point');
+      if (pt && pt.coordinates) geom = pt;
+      else if (inc.centroidLng != null && inc.centroidLat != null) {
+        geom = { type: 'Point', coordinates: [Number(inc.centroidLng), Number(inc.centroidLat)] };
+      }
+    }
+
+    return {
+      type: 'Feature',
+      id: inc.id,
+      geometry: geom,
+      properties: {
+        id: inc.id,
+        title: inc.title,
+        alertLevel: inc.alertLevel,
+        status: inc.status,
+        category: inc.category,
+        councilArea: inc.councilArea,
+        sizeHa: inc.sizeHa,
+        source: inc.provenance ? inc.provenance.providerName : 'NSW RFS',
+        freshness: inc.provenance ? inc.provenance.freshness : 'live'
+      }
+    };
+  });
 
   const srcInc = state.map.getSource('source-incidents');
   if (srcInc) srcInc.setData({ type: 'FeatureCollection', features: incFeatures });

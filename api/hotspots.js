@@ -50,24 +50,24 @@ export default async function handler(req, res) {
           const dateIdx = header.indexOf('acq_date');
           const timeIdx = header.indexOf('acq_time');
 
-          const hotspots = [];
-          for (let i = 1; i < lines.length && hotspots.length < 500; i++) {
+          const allDetections = [];
+          for (let i = 1; i < lines.length; i++) {
             const cols = lines[i].split(',');
             if (cols.length > lonIdx && latIdx >= 0) {
               const lat = parseFloat(cols[latIdx]);
               const lon = parseFloat(cols[lonIdx]);
               if (!isNaN(lat) && !isNaN(lon)) {
-                hotspots.push({
+                allDetections.push({
                   id: `NASA-FIRMS-${i}`,
                   latitude: lat,
                   longitude: lon,
                   acquiredAtIso: `${cols[dateIdx] || ''}T${cols[timeIdx] || '0000'}Z`,
-                  satellite: 'VIIRS SNPP',
+                  satellite: cols[header.indexOf('satellite')] || 'VIIRS SNPP',
                   instrument: 'VIIRS',
                   confidence: cols[confIdx] || 'nominal',
                   frpMw: frpIdx >= 0 ? parseFloat(cols[frpIdx]) || 10.0 : 10.0,
                   brightnessK: brightIdx >= 0 ? parseFloat(cols[brightIdx]) || 310.0 : 310.0,
-                  dayNight: 'D',
+                  dayNight: cols[header.indexOf('daynight')] || 'D',
                   provenance: {
                     providerId: 'nasa-firms',
                     providerName: 'NASA FIRMS (Live API Key)',
@@ -80,6 +80,10 @@ export default async function handler(req, res) {
               }
             }
           }
+
+          // Prioritize active intense fire fronts across the continent
+          allDetections.sort((a, b) => b.frpMw - a.frpMw);
+          const hotspots = allDetections.slice(0, 1200);
 
           if (hotspots.length > 0) {
             res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
