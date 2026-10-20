@@ -35,18 +35,17 @@ const BASEMAP_STYLES = {
   dark: {
     version: 8,
     sources: {
-      'carto-dark': {
+      'esri-dark': {
         type: 'raster',
         tiles: [
-          'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-          'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'
+          'https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{x}/{y}'
         ],
         tileSize: 256,
-        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom'
       }
     },
     layers: [
-      { id: 'carto-dark-layer', type: 'raster', source: 'carto-dark', minzoom: 0, maxzoom: 19 }
+      { id: 'esri-dark-layer', type: 'raster', source: 'esri-dark', minzoom: 0, maxzoom: 19 }
     ]
   },
   liberty: 'https://tiles.openfreemap.org/styles/liberty',
