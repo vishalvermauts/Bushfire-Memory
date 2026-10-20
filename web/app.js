@@ -35,19 +35,28 @@ const BASEMAP_STYLES = {
   dark: {
     version: 8,
     sources: {
-      'esri-dark': {
+      'esri-dark-base': {
         type: 'raster',
         tiles: [
-          'https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{x}/{y}'
+          'https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
         ],
         tileSize: 256,
         attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom'
+      },
+      'esri-dark-ref': {
+        type: 'raster',
+        tiles: [
+          'https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'
+        ],
+        tileSize: 256
       }
     },
     layers: [
-      { id: 'esri-dark-layer', type: 'raster', source: 'esri-dark', minzoom: 0, maxzoom: 19 }
+      { id: 'esri-dark-base-layer', type: 'raster', source: 'esri-dark-base', minzoom: 0, maxzoom: 19 },
+      { id: 'esri-dark-ref-layer', type: 'raster', source: 'esri-dark-ref', minzoom: 0, maxzoom: 19 }
     ]
   },
+  ofmDark: 'https://tiles.openfreemap.org/styles/dark',
   liberty: 'https://tiles.openfreemap.org/styles/liberty',
   imagery: {
     version: 8,
