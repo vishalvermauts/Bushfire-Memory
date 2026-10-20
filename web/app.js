@@ -252,15 +252,29 @@ function switchBasemap(styleKey) {
 
   state.map.setStyle(targetStyle);
 
+  let executed = false;
   const rebind = () => {
+    if (executed) return;
+    executed = true;
+    state.map.off('style.load', rebind);
+    state.map.off('styledata', onStyledata);
+    setupMapLayers();
+    updateMapSources();
+  };
+
+  const onStyledata = () => {
     if (state.map.isStyleLoaded()) {
-      state.map.off('styledata', rebind);
-      setupMapLayers();
-      updateMapSources();
+      rebind();
     }
   };
 
-  state.map.on('styledata', rebind);
+  state.map.once('style.load', rebind);
+  state.map.on('styledata', onStyledata);
+
+  // Fallback timer to ensure layers restore even on fast cached style transitions
+  setTimeout(() => {
+    if (!executed) rebind();
+  }, 500);
 }
 
 function applyLayerVisibilities() {
@@ -288,7 +302,9 @@ function setupMapLayers() {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] }
       });
+    }
 
+    if (!state.map.getLayer('layer-history-fill')) {
       state.map.addLayer({
         id: 'layer-history-fill',
         type: 'fill',
@@ -304,7 +320,9 @@ function setupMapLayers() {
           'fill-opacity': 0.35
         }
       });
+    }
 
+    if (!state.map.getLayer('layer-history-line')) {
       state.map.addLayer({
         id: 'layer-history-line',
         type: 'line',
@@ -332,7 +350,9 @@ function setupMapLayers() {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] }
       });
+    }
 
+    if (!state.map.getLayer('layer-hotspots-pulse')) {
       state.map.addLayer({
         id: 'layer-hotspots-pulse',
         type: 'circle',
@@ -368,7 +388,9 @@ function setupMapLayers() {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] }
       });
+    }
 
+    if (!state.map.getLayer('layer-incidents-circles')) {
       state.map.addLayer({
         id: 'layer-incidents-circles',
         type: 'circle',
@@ -387,7 +409,9 @@ function setupMapLayers() {
           'circle-stroke-width': 2
         }
       });
+    }
 
+    if (!state.map.getLayer('layer-incidents-labels')) {
       try {
         state.map.addLayer({
           id: 'layer-incidents-labels',
@@ -424,7 +448,9 @@ function setupMapLayers() {
         ],
         tileSize: 256
       });
+    }
 
+    if (!state.map.getLayer('layer-fesm-wms')) {
       state.map.addLayer({
         id: 'layer-fesm-wms',
         type: 'raster',
