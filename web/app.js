@@ -702,11 +702,8 @@ window.selectEventForSimilarity = async function(eventId) {
           </div>
         </div>
       `;
-      resultsDiv.appendChild(card);
-    });
-
-  } catch (err) {
-    refCard.innerHTML = `<div style="color: var(--accent-red);">Network or computation error: ${err.message}</div>`;
+    resultsDiv.appendChild(card);
+  });
 };
 
 function haversineDistanceKm(lat1, lon1, lat2, lon2) {
