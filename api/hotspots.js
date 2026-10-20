@@ -20,8 +20,20 @@ export default async function handler(req, res) {
       const firmsRes = await fetch(url, { signal: controller.signal });
       clearTimeout(timeout);
 
+      const csvText = await firmsRes.text();
+
+      if (req.query.debug) {
+        return res.status(200).json({
+          hasKey: true,
+          keyLength: nasaKey.length,
+          firmsHttpStatus: firmsRes.status,
+          firmsHttpOk: firmsRes.ok,
+          rawTextSnippet: csvText.substring(0, 400),
+          linesCount: csvText.trim().split('\n').length
+        });
+      }
+
       if (firmsRes.ok) {
-        const csvText = await firmsRes.text();
         const lines = csvText.trim().split('\n');
         if (lines.length > 1) {
           const header = lines[0].split(',');
@@ -71,6 +83,9 @@ export default async function handler(req, res) {
         }
       }
     } catch (err) {
+      if (req.query.debug) {
+        return res.status(200).json({ debugError: err.message });
+      }
       console.warn('Live NASA FIRMS query failed, falling back to baseline:', err.message);
     }
   }
