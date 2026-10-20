@@ -548,48 +548,87 @@ function showFeatureDetails(feature) {
   const body = document.getElementById('drawer-body');
 
   const props = feature.properties || {};
-  const fireName = props.fireName || props.title || `Incident ${props.id || ''}`;
-  title.textContent = fireName;
+  const isHotspot = props.id && props.id.toString().startsWith('NASA-FIRMS');
 
-  const area = Number(props.sizeHa || props.areaHa || 0).toLocaleString();
-  const location = props.councilArea || props.bioregionOrCouncil || 'New South Wales';
-  const type = props.fireType || props.category || 'Bush Fire';
-  const status = props.alertLevel || props.status || props.confidence || 'Monitored';
-  const season = props.fireSeason || 'Current Season';
-  const source = props.source || 'Official Agency Feed';
+  if (isHotspot) {
+    title.textContent = `NASA FIRMS Hotspot (${props.satellite || 'VIIRS'})`;
+    const frp = Number(props.frpMw || 0).toFixed(1);
+    const bright = Number(props.brightnessK || 0).toFixed(1);
+    const conf = props.confidence === 'h' ? 'High' : (props.confidence === 'l' ? 'Low' : 'Nominal');
+    const acqTime = props.acquiredAtIso ? props.acquiredAtIso.replace('T', ' ').replace('Z', ' UTC') : 'Recent Satellite Pass';
 
-  let html = `
-    <div class="hero-stat-grid">
-      <div class="hero-stat-box">
-        <div class="hero-stat-label">Estimated Footprint</div>
-        <div class="hero-stat-value">${area} ha</div>
+    body.innerHTML = `
+      <div class="hero-stat-grid">
+        <div class="hero-stat-box">
+          <div class="hero-stat-label">Fire Radiative Power</div>
+          <div class="hero-stat-value" style="color: #ea580c;">${frp} MW</div>
+        </div>
+        <div class="hero-stat-box">
+          <div class="hero-stat-label">Brightness Temp</div>
+          <div class="hero-stat-value" style="color: #f59e0b;">${bright} K</div>
+        </div>
+        <div class="hero-stat-box">
+          <div class="hero-stat-label">Confidence</div>
+          <div class="hero-stat-value" style="color: #22c55e;">${conf}</div>
+        </div>
+        <div class="hero-stat-box">
+          <div class="hero-stat-label">Sensor / Band</div>
+          <div class="hero-stat-value">${props.instrument || 'VIIRS'} (375m)</div>
+        </div>
       </div>
-      <div class="hero-stat-box">
-        <div class="hero-stat-label">Status / Level</div>
-        <div class="hero-stat-value" style="color: #fbbf24;">${status}</div>
-      </div>
-      <div class="hero-stat-box">
-        <div class="hero-stat-label">Classification</div>
-        <div class="hero-stat-value">${type}</div>
-      </div>
-      <div class="hero-stat-box">
-        <div class="hero-stat-label">Season / Cycle</div>
-        <div class="hero-stat-value">${season}</div>
-      </div>
-    </div>
 
-    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px;">
-      <div style="font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Location & Source</div>
-      <div style="font-size: 13px; font-weight: 600; color: #fff; margin-top: 4px;">📍 ${location}</div>
-      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Provider: ${source}</div>
-    </div>
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+        <div style="font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Satellite Telemetry & Source</div>
+        <div style="font-size: 13px; font-weight: 600; color: #fff; margin-top: 4px;">🛰️ ${acqTime}</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Provider: NASA FIRMS (Live API Key Configured)</div>
+      </div>
 
-    <button class="btn-cta-find-similar" onclick="selectEventForSimilarity('${props.id}')">
-      ✨ Find Historically Similar Fires
-    </button>
-  `;
+      <button class="btn-cta-find-similar" onclick="selectEventForSimilarity('${props.id}')">
+        ✨ Find Historically Similar Fires
+      </button>
+    `;
+  } else {
+    const fireName = props.fireName || props.title || `Incident ${props.id || ''}`;
+    title.textContent = fireName;
 
-  body.innerHTML = html;
+    const area = Number(props.sizeHa || props.areaHa || 0).toLocaleString();
+    const location = props.councilArea || props.bioregionOrCouncil || 'New South Wales';
+    const type = props.fireType || props.category || 'Bush Fire';
+    const status = props.status || props.alertLevel || 'Active';
+    const season = props.fireSeason || 'Current Season';
+    const source = props.source || 'NSW Rural Fire Service';
+
+    body.innerHTML = `
+      <div class="hero-stat-grid">
+        <div class="hero-stat-box">
+          <div class="hero-stat-label">Estimated Footprint</div>
+          <div class="hero-stat-value">${area} ha</div>
+        </div>
+        <div class="hero-stat-box">
+          <div class="hero-stat-label">Incident Status</div>
+          <div class="hero-stat-value" style="color: #fbbf24;">${status}</div>
+        </div>
+        <div class="hero-stat-box">
+          <div class="hero-stat-label">Classification</div>
+          <div class="hero-stat-value">${type}</div>
+        </div>
+        <div class="hero-stat-box">
+          <div class="hero-stat-label">Season / Cycle</div>
+          <div class="hero-stat-value">${season}</div>
+        </div>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+        <div style="font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Location & Source</div>
+        <div style="font-size: 13px; font-weight: 600; color: #fff; margin-top: 4px;">📍 ${location}</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Provider: ${source}</div>
+      </div>
+
+      <button class="btn-cta-find-similar" onclick="selectEventForSimilarity('${props.id}')">
+        ✨ Find Historically Similar Fires
+      </button>
+    `;
+  }
   drawer.classList.remove('hidden');
 }
 
