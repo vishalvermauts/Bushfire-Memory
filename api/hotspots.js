@@ -15,8 +15,11 @@ export default async function handler(req, res) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 8000);
 
+      const days = req.query.days || '2';
+      const source = req.query.source || 'VIIRS_SNPP_NRT';
+
       // Query NASA FIRMS VIIRS NRT using the official Area bounding box for Australia: west,south,east,north
-      const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${nasaKey.trim()}/VIIRS_SNPP_NRT/112,-44,154,-10/1`;
+      const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${nasaKey.trim()}/${source}/112,-44,154,-10/${days}`;
       const firmsRes = await fetch(url, { signal: controller.signal });
       clearTimeout(timeout);
 
@@ -26,6 +29,8 @@ export default async function handler(req, res) {
         return res.status(200).json({
           hasKey: true,
           keyLength: nasaKey.length,
+          source,
+          days,
           firmsHttpStatus: firmsRes.status,
           firmsHttpOk: firmsRes.ok,
           rawTextSnippet: csvText.substring(0, 400),
