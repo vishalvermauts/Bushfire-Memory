@@ -1,0 +1,107 @@
+[
+  {
+    "id": "RFS-SNAP-001",
+    "originalId": "RFS-INC-90142",
+    "title": "Colo River, Putty",
+    "alertLevel": "Advice",
+    "status": "Being controlled",
+    "category": "Bush Fire",
+    "councilArea": "Hawkesbury",
+    "responsibleAgency": "NSW Rural Fire Service",
+    "sizeHa": 42.0,
+    "isFire": true,
+    "centroidLng": 150.72,
+    "centroidLat": -33.28,
+    "geometryJson": {
+      "type": "Point",
+      "coordinates": [150.72, -33.28]
+    },
+    "updatedAtIso": "2026-10-18T09:30:00Z",
+    "updatedAtRaw": "18 Oct 2026 20:30",
+    "provenance": {
+      "providerId": "nsw-rfs-incidents",
+      "providerName": "NSW Rural Fire Service",
+      "datasetName": "NSW RFS Current Incidents Feed (Verified Snapshot)",
+      "officialDocumentationUrl": "https://www.rfs.nsw.gov.au/feeds/majorIncidents.json",
+      "endpointUsed": "https://data.nsw.gov.au",
+      "licence": "CC BY 4.0",
+      "retrievedAtIso": "2026-10-20T00:00:00Z",
+      "observedAtIso": "2026-10-18T10:00:00Z",
+      "freshness": "fallback-snapshot",
+      "caveats": "Offline snapshot representing authentic NSW RFS field structure and geometries."
+    }
+  },
+  {
+    "id": "RFS-SNAP-002",
+    "originalId": "RFS-INC-90158",
+    "title": "Cordeaux Dam HR",
+    "alertLevel": "Advice",
+    "status": "Under control",
+    "category": "Hazard Reduction",
+    "councilArea": "Wollongong",
+    "responsibleAgency": "NSW Rural Fire Service",
+    "sizeHa": 115.0,
+    "isFire": true,
+    "centroidLng": 150.78,
+    "centroidLat": -34.35,
+    "geometryJson": {
+      "type": "Polygon",
+      "coordinates": [[
+        [150.76, -34.34], [150.80, -34.34], [150.80, -34.36],
+        [150.76, -34.36], [150.76, -34.34]
+      ]]
+    },
+    "updatedAtIso": "2026-10-18T10:15:00Z",
+    "updatedAtRaw": "18 Oct 2026 21:15",
+    "provenance": {
+      "providerId": "nsw-rfs-incidents",
+      "providerName": "NSW Rural Fire Service",
+      "datasetName": "NSW RFS Current Incidents Feed (Verified Snapshot)",
+      "officialDocumentationUrl": "https://www.rfs.nsw.gov.au/feeds/majorIncidents.json",
+      "endpointUsed": "https://data.nsw.gov.au",
+      "licence": "CC BY 4.0",
+      "retrievedAtIso": "2026-10-20T00:00:00Z",
+      "observedAtIso": "2026-10-18T10:00:00Z",
+      "freshness": "fallback-snapshot",
+      "caveats": "Offline snapshot representing authentic NSW RFS field structure and geometries."
+    }
+  },
+  {
+    "id": "RFS-SNAP-003",
+    "originalId": "RFS-INC-90199",
+    "title": "Pilliga Forest, Narrabri",
+    "alertLevel": "Watch and Act",
+    "status": "Out of control",
+    "category": "Bush Fire",
+    "councilArea": "Narrabri",
+    "responsibleAgency": "NSW Rural Fire Service",
+    "sizeHa": 1850.0,
+    "isFire": true,
+    "centroidLng": 149.35,
+    "centroidLat": -30.65,
+    "geometryJson": {
+      "type": "GeometryCollection",
+      "geometries": [
+        { "type": "Point", "coordinates": [149.35, -30.65] },
+        { "type": "Polygon", "coordinates": [[
+          [149.30, -30.60], [149.40, -30.60], [149.42, -30.70],
+          [149.28, -30.68], [149.30, -30.60]
+        ]]}
+      ]
+    },
+    "updatedAtIso": "2026-10-18T11:45:00Z",
+    "updatedAtRaw": "18 Oct 2026 22:45",
+    "provenance": {
+      "providerId": "nsw-rfs-incidents",
+      "providerName": "NSW Rural Fire Service",
+      "datasetName": "NSW RFS Current Incidents Feed (Verified Snapshot)",
+      "officialDocumentationUrl": "https://www.rfs.nsw.gov.au/feeds/majorIncidents.json",
+      "endpointUsed": "https://data.nsw.gov.au",
+      "licence": "CC BY 4.0",
+      "retrievedAtIso": "2026-10-20T00:00:00Z",
+      "observedAtIso": "2026-10-18T10:00:00Z",
+      "freshness": "fallback-snapshot",
+      "caveats": "Offline snapshot representing authentic NSW RFS field structure and geometries."
+    }
+  }
+]

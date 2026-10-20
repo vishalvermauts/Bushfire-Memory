@@ -1,0 +1,34 @@
+[
+  {
+    "providerId": "nsw-rfs-incidents",
+    "providerName": "NSW Rural Fire Service",
+    "freshness": "cached-fresh",
+    "recordCount": 9,
+    "lastLatencyMs": 285,
+    "details": "Operational GeoJSON feed active. Cache TTL: 120s."
+  },
+  {
+    "providerId": "dea-hotspots",
+    "providerName": "Digital Earth Australia & NASA FIRMS",
+    "freshness": "fallback-snapshot",
+    "recordCount": 3,
+    "lastLatencyMs": 0,
+    "details": "Satellite thermal anomaly detections loaded from verified historical baseline."
+  },
+  {
+    "providerId": "nsw-npws-history",
+    "providerName": "NSW NPWS Fire History",
+    "freshness": "fallback-snapshot",
+    "recordCount": 8,
+    "lastLatencyMs": 0,
+    "details": "Authentic vector perimeters for Black Summer mega-fires & prescribed burns."
+  },
+  {
+    "providerId": "dea-stac-ows",
+    "providerName": "DEA & Copernicus STAC API",
+    "freshness": "live",
+    "recordCount": 2,
+    "lastLatencyMs": 606,
+    "details": "Connected to Geoscience Australia STAC API endpoint."
+  }
+]

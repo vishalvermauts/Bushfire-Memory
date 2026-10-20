@@ -1,0 +1,34 @@
+[
+  {
+    "id": "true-colour",
+    "name": "True Colour (Natural RGB)",
+    "bands": ["B04 (Red)", "B03 (Green)", "B02 (Blue)"],
+    "formula": "RGB = B04, B03, B02",
+    "recommendedUse": "Visual context, smoke plume tracking, and landform orientation.",
+    "caveats": "Cannot penetrate dense smoke haze or cloud cover. Fails to separate shadow from low-severity burn."
+  },
+  {
+    "id": "false-colour-swir",
+    "name": "False Colour SWIR (Burn Scar Emphasis)",
+    "bands": ["B12 (SWIR-2)", "B8A (Narrow NIR)", "B04 (Red)"],
+    "formula": "RGB = B12, B8A, B04",
+    "recommendedUse": "Penetrating atmospheric smoke and clearly delineating actively burning fronts and charred ground.",
+    "caveats": "20m spatial resolution. Exposed dry soil or bare rock can display reflectance similar to fire scars."
+  },
+  {
+    "id": "ndvi",
+    "name": "NDVI (Normalized Difference Vegetation Index)",
+    "bands": ["B08 (NIR)", "B04 (Red)"],
+    "formula": "NDVI = (B08 - B04) / (B08 + B04)",
+    "recommendedUse": "Measuring canopy photosynthetic vigor and post-fire ecological recovery trajectory.",
+    "caveats": "Severe drought and seasonal curing reduce NDVI significantly, even in completely unburnt canopies."
+  },
+  {
+    "id": "dnbr",
+    "name": "dNBR (Differenced Normalized Burn Ratio)",
+    "bands": ["B8A (Narrow NIR)", "B12 (SWIR-2)"],
+    "formula": "NBR = (B8A - B12) / (B8A + B12); dNBR = NBR_pre - NBR_post",
+    "recommendedUse": "Standard satellite metric for fire severity classification (unburnt, low, moderate, high).",
+    "caveats": "Requires pre-fire and post-fire cloud-free imagery. Agricultural mowing or logging mimics fire damage."
+  }
+]

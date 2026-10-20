@@ -383,12 +383,34 @@ function setupMapLayers() {
   });
 }
 
+async function safeFetchJson(url, fallbackUrl) {
+  try {
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && (!Array.isArray(data) || data.length > 0)) return data;
+    }
+  } catch (err) {
+    // try fallback
+  }
+
+  if (fallbackUrl) {
+    try {
+      const res = await fetch(fallbackUrl);
+      if (res.ok) return await res.json();
+    } catch (err) {
+      console.warn(`Fallback fetch failed for ${fallbackUrl}:`, err);
+    }
+  }
+  return [];
+}
+
 async function fetchMapData(force = false) {
   try {
     const [incidentsRes, hotspotsRes, historyRes] = await Promise.all([
-      fetch(`${API_BASE}/api/v1/incidents`).then(r => r.json()),
-      fetch(`${API_BASE}/api/v1/hotspots`).then(r => r.json()),
-      fetch(`${API_BASE}/api/v1/history`).then(r => r.json())
+      safeFetchJson(`${API_BASE}/api/v1/incidents`, `${API_BASE}/api/incidents.json`),
+      safeFetchJson(`${API_BASE}/api/v1/hotspots`, `${API_BASE}/api/hotspots.json`),
+      safeFetchJson(`${API_BASE}/api/v1/history`, `${API_BASE}/api/history.json`)
     ]);
 
     state.incidents = incidentsRes || [];
@@ -608,14 +630,24 @@ window.selectEventForSimilarity = async function(eventId) {
   refCard.innerHTML = `<div style="color: var(--accent-blue);">Computing 4-factor deterministic historical similarity...</div>`;
   resultsDiv.innerHTML = '';
 
+  let data = null;
   try {
     const res = await fetch(`${API_BASE}/api/v1/similarity?event_id=${encodeURIComponent(eventId)}&limit=5`);
-    const data = await res.json();
-
-    if (!res.ok || data.error) {
-      refCard.innerHTML = `<div style="color: var(--accent-red);">Error: ${data.error || 'Failed to compute similarity'}</div>`;
-      return;
+    if (res.ok) {
+      data = await res.json();
     }
+  } catch (err) {
+    // network or static host without backend
+  }
+
+  if (!data || data.error || !data.matches || data.matches.length === 0) {
+    data = computeClientSideSimilarity(eventId, 5);
+  }
+
+  if (!data || data.error) {
+    refCard.innerHTML = `<div style="color: var(--accent-red);">Error: ${data ? data.error : 'Failed to compute similarity'}</div>`;
+    return;
+  }
 
     const ref = data.referenceEvent;
     refCard.innerHTML = `
@@ -675,8 +707,91 @@ window.selectEventForSimilarity = async function(eventId) {
 
   } catch (err) {
     refCard.innerHTML = `<div style="color: var(--accent-red);">Network or computation error: ${err.message}</div>`;
-  }
 };
+
+function haversineDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371.0;
+  const dLat = (lat2 - lat1) * Math.PI / 180.0;
+  const dLon = (lon2 - lon1) * Math.PI / 180.0;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180.0) * Math.cos(lat2 * Math.PI / 180.0) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function computeClientSideSimilarity(eventId, limit = 5) {
+  const allEvents = [...state.historyFires, ...state.incidents.map(inc => ({
+    id: inc.id,
+    fireName: inc.title,
+    fireSeason: 'Current',
+    fireType: inc.category || 'Wildfire',
+    areaHa: inc.sizeHa || 100.0,
+    bioregionOrCouncil: inc.councilArea || 'NSW',
+    dayOfYear: 290,
+    centroidLng: inc.centroidLng || (inc.centroid ? inc.centroid[0] : 150.0),
+    centroidLat: inc.centroidLat || (inc.centroid ? inc.centroid[1] : -33.5),
+    provenance: inc.provenance
+  }))];
+
+  const ref = allEvents.find(e => e.id === eventId);
+  if (!ref) return { error: `Reference event ${eventId} not found.` };
+
+  const matches = [];
+  for (const target of state.historyFires) {
+    if (target.id === ref.id && allEvents.length > 1) {
+      matches.push({
+        record: target,
+        totalScorePct: 100.0,
+        geoScore: 1.0,
+        sizeScore: 1.0,
+        seasonScore: 1.0,
+        typeScore: 1.0,
+        distanceKm: 0.0,
+        explanation: 'Self-identity baseline match (100.0% similarity).'
+      });
+      continue;
+    }
+
+    // 1. Geography score: max(0.0, 1.0 - distKm / 500.0)
+    const distKm = haversineDistanceKm(ref.centroidLat, ref.centroidLng, target.centroidLat, target.centroidLng);
+    const sGeo = Math.max(0.0, 1.0 - distKm / 500.0);
+
+    // 2. Scale / Area score: min(A1, A2) / max(A1, A2)
+    const refArea = Math.max(1.0, ref.areaHa || 1.0);
+    const targetArea = Math.max(1.0, target.areaHa || 1.0);
+    const sSize = Math.min(refArea, targetArea) / Math.max(refArea, targetArea);
+
+    // 3. Seasonality: circular Day of Year
+    const refDoy = ref.dayOfYear || 1;
+    const targetDoy = target.dayOfYear || 1;
+    const diffDoy = Math.abs(refDoy - targetDoy);
+    const seasonDays = Math.min(diffDoy, 365 - diffDoy);
+    const sSeason = Math.max(0.0, 1.0 - seasonDays / 91.25);
+
+    // 4. Fire Type
+    const sType = (ref.fireType === target.fireType) ? 1.0 : 0.2;
+
+    const totalScorePct = (0.35 * sGeo + 0.25 * sSize + 0.20 * sSeason + 0.20 * sType) * 100.0;
+
+    matches.push({
+      record: target,
+      totalScorePct: totalScorePct,
+      geoScore: sGeo,
+      sizeScore: sSize,
+      seasonScore: sSeason,
+      typeScore: sType,
+      distanceKm: distKm,
+      explanation: `Deterministic 4-factor heuristic match score: ${totalScorePct.toFixed(1)}%.`
+    });
+  }
+
+  matches.sort((a, b) => b.totalScorePct - a.totalScorePct);
+  return {
+    referenceEvent: ref,
+    matches: matches.slice(0, limit)
+  };
+}
 
 // -----------------------------------------------------------------------------
 // WORKSPACE 3: SATELLITE & CHANGE INSPECTOR
@@ -784,21 +899,46 @@ function initHealthAndExports() {
 
 async function loadInitialData() {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/health`);
-    const data = await res.json();
+    let data = null;
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/health`);
+      if (res.ok) data = await res.json();
+    } catch (e) {}
 
-    state.providerStatuses = data.providers || [];
-    renderHealthTable();
+    if (!data) {
+      const fallbackProvs = await safeFetchJson(`${API_BASE}/api/status.json`, null);
+      if (fallbackProvs && fallbackProvs.length > 0) {
+        data = {
+          status: 'ok',
+          providers: fallbackProvs.map(p => ({
+            providerId: p.providerId,
+            name: p.providerName,
+            endpointUrl: 'https://datasets.seed.nsw.gov.au',
+            licence: 'CC BY 4.0',
+            status: p.freshness,
+            latencyMs: p.lastLatencyMs,
+            recordCount: p.recordCount
+          }))
+        };
+      }
+    }
 
-    // Update global status badge in header
-    const pill = document.getElementById('global-freshness-pill');
-    let hasLive = state.providerStatuses.some(p => p.status === 'live');
-    if (hasLive) {
-      pill.className = 'badge badge-live';
-      pill.textContent = 'Live Connected';
-    } else {
-      pill.className = 'badge badge-fallback';
-      pill.textContent = 'CORS / Snapshot Mode';
+    if (data) {
+      state.providerStatuses = data.providers || [];
+      renderHealthTable();
+
+      // Update global status badge in header
+      const pill = document.getElementById('global-freshness-pill');
+      if (pill) {
+        let hasLive = state.providerStatuses.some(p => p.status === 'live');
+        if (hasLive) {
+          pill.className = 'badge badge-live';
+          pill.textContent = 'Live Connected';
+        } else {
+          pill.className = 'badge badge-fallback';
+          pill.textContent = 'Snapshot Mode (Vercel / Static)';
+        }
+      }
     }
   } catch (err) {
     console.error('Failed to load health status:', err);

@@ -114,3 +114,16 @@ cmake --build build --parallel 2
 * **NASA EOSDIS**: Fire Information for Resource Management System (FIRMS) (NASA Open Data)
 * **NSW Department of Climate Change, Energy, the Environment and Water**: NPWS Fire History, FESM v1, GEEBAM (CC BY 4.0)
 * **European Space Agency / European Commission**: Copernicus Data Space Ecosystem (Open Access)
+
+---
+
+## 7. Hosting on Vercel
+
+Bushfire Memory supports **1-click deployment on Vercel**:
+
+* **Standalone Edge Mode (100% Free Tier)**: Serves the zero-build MapLibre console with pre-rendered data snapshots and browser-executed 4-factor deterministic similarity scoring.
+* **Hybrid Mode**: Deploys the static frontend on Vercel's global CDN while reverse-proxying `/api/*` to the C++20 container (Fly.io / Railway / Docker) using `vercel.json` rewrites.
+
+See [`docs/VERCEL_DEPLOYMENT.md`](file:///c:/AI/Bushfire%20Memory/docs/VERCEL_DEPLOYMENT.md) for full instructions.
+
+

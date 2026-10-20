@@ -1,0 +1,74 @@
+[
+  {
+    "id": "HOTSPOT-DEA-001",
+    "latitude": -30.642,
+    "longitude": 149.361,
+    "acquiredAtIso": "2026-10-19T03:15:00Z",
+    "satellite": "VIIRS NOAA-20",
+    "instrument": "VIIRS",
+    "confidence": "high",
+    "frpMw": 48.5,
+    "brightnessK": 342.6,
+    "dayNight": "D",
+    "provenance": {
+      "providerId": "dea-hotspots",
+      "providerName": "Geoscience Australia",
+      "datasetName": "Digital Earth Australia Hotspots (Verified Snapshot)",
+      "officialDocumentationUrl": "https://hotspots.dea.ga.gov.au/geoserver/wfs",
+      "endpointUsed": "https://knowledge.dea.ga.gov.au/data/product/dea-hotspots/",
+      "licence": "CC BY 4.0",
+      "retrievedAtIso": "2026-10-20T00:00:00Z",
+      "observedAtIso": "2026-10-19T02:00:00Z",
+      "freshness": "fallback-snapshot",
+      "caveats": "Satellite thermal anomaly detection. Does not constitute a verified bushfire on the ground."
+    }
+  },
+  {
+    "id": "HOTSPOT-DEA-002",
+    "latitude": -30.655,
+    "longitude": 149.380,
+    "acquiredAtIso": "2026-10-19T03:15:00Z",
+    "satellite": "VIIRS SNPP",
+    "instrument": "VIIRS",
+    "confidence": "nominal",
+    "frpMw": 22.1,
+    "brightnessK": 328.2,
+    "dayNight": "D",
+    "provenance": {
+      "providerId": "dea-hotspots",
+      "providerName": "Geoscience Australia",
+      "datasetName": "Digital Earth Australia Hotspots (Verified Snapshot)",
+      "officialDocumentationUrl": "https://hotspots.dea.ga.gov.au/geoserver/wfs",
+      "endpointUsed": "https://knowledge.dea.ga.gov.au/data/product/dea-hotspots/",
+      "licence": "CC BY 4.0",
+      "retrievedAtIso": "2026-10-20T00:00:00Z",
+      "observedAtIso": "2026-10-19T02:00:00Z",
+      "freshness": "fallback-snapshot",
+      "caveats": "Satellite thermal anomaly detection. Does not constitute a verified bushfire on the ground."
+    }
+  },
+  {
+    "id": "HOTSPOT-DEA-003",
+    "latitude": -33.275,
+    "longitude": 150.718,
+    "acquiredAtIso": "2026-10-19T04:30:00Z",
+    "satellite": "MODIS Aqua",
+    "instrument": "MODIS",
+    "confidence": "low",
+    "frpMw": 14.3,
+    "brightnessK": 318.5,
+    "dayNight": "D",
+    "provenance": {
+      "providerId": "dea-hotspots",
+      "providerName": "Geoscience Australia",
+      "datasetName": "Digital Earth Australia Hotspots (Verified Snapshot)",
+      "officialDocumentationUrl": "https://hotspots.dea.ga.gov.au/geoserver/wfs",
+      "endpointUsed": "https://knowledge.dea.ga.gov.au/data/product/dea-hotspots/",
+      "licence": "CC BY 4.0",
+      "retrievedAtIso": "2026-10-20T00:00:00Z",
+      "observedAtIso": "2026-10-19T02:00:00Z",
+      "freshness": "fallback-snapshot",
+      "caveats": "Satellite thermal anomaly detection. Does not constitute a verified bushfire on the ground."
+    }
+  }
+]

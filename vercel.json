@@ -1,0 +1,31 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "outputDirectory": "web",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, OPTIONS" },
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/v1/incidents", "destination": "/api/incidents.json" },
+    { "source": "/api/v1/hotspots", "destination": "/api/hotspots.json" },
+    { "source": "/api/v1/history", "destination": "/api/history.json" },
+    { "source": "/api/v1/status", "destination": "/api/status.json" },
+    { "source": "/api/v1/health", "destination": "/api/status.json" },
+    { "source": "/api/v1/satellite/modes", "destination": "/api/satellite_modes.json" }
+  ]
+}
